@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — ArchTier Adaptive Architecture Guardrails</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ==========================================================================
+       ArchTier Design System Tokens (Consistent with Landing Page v2.4)
+       Dials -> Variance: 7/10 | Motion: 6/10 | Density: 5/10
+       ========================================================================== */
+    :root {
+      --bg-primary: #090C12;
+      --bg-elevated: #0E131D;
+      --surface-card: #121825;
+      --surface-card-alt: #161E2E;
+      --surface-hover: #1C263A;
+      --surface-inset: #0A0E16;
+
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+
+      --accent-primary: #10B981;
+      --accent-primary-hover: #14C98E;
+      --accent-primary-soft: rgba(16, 185, 129, 0.12);
+      --accent-primary-border: rgba(16, 185, 129, 0.34);
+
+      --status-warning: #F59E0B;
+      --status-warning-soft: rgba(245, 158, 11, 0.12);
+      --status-warning-border: rgba(245, 158, 11, 0.30);
+
+      --status-deferred: #38BDF8;
+      --status-deferred-soft: rgba(56, 189, 248, 0.11);
+      --status-deferred-border: rgba(56, 189, 248, 0.28);
+
+      --status-danger: #F43F5E;
+      --status-danger-soft: rgba(244, 63, 94, 0.12);
+      --status-danger-border: rgba(244, 63, 94, 0.32);
+
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+
+      --font-display: 'Bricolage Grotesque', system-ui, -apple-system, sans-serif;
+      --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 18px;
+
+      --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.28);
+      --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.45), 0 24px 64px rgba(0, 0, 0, 0.55);
+
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      --ease-fast: cubic-bezier(0.2, 0, 0, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    body {
+      min-height: 100vh;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Atmospheric Blueprint Grid + Emerald Radial Glow */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        radial-gradient(ellipse 65% 55% at 80% 10%, rgba(16, 185, 129, 0.11), transparent 65%),
+        radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.04) 1px, transparent 0);
+      background-size: 100% 100%, 28px 28px;
+    }
+
+    .noise-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    .mono { font-family: var(--font-mono); }
+    .tabular { font-variant-numeric: tabular-nums; }
+
+    h1, h2, h3 {
+      font-family: var(--font-display);
+      letter-spacing: -0.03em;
+      line-height: 1.14;
+      text-wrap: balance;
+      color: var(--text-primary);
+    }
+
+    /* ==========================================================================
+       Editorial Split-Screen Shell
+       ========================================================================== */
+    .auth-layout {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+    }
+
+    /* ---------------- LEFT PANEL: Auth Form ---------------- */
+    .auth-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: clamp(1.25rem, 3vw, 2.25rem) clamp(1.25rem, 5vw, 4rem);
+      background: rgba(9, 12, 18, 0.88);
+      border-right: 1px solid var(--border-subtle);
+      min-width: 0;
+    }
+
+    .auth-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .brand-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1.18rem;
+      letter-spacing: -0.03em;
+      min-height: 44px;
+    }
+
+    .brand-badge {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--accent-primary);
+      background: var(--accent-primary-soft);
+      border: 1px solid var(--accent-primary-border);
+      padding: 0.14rem 0.45rem;
+      border-radius: 999px;
+    }
+
+    .engine-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--text-secondary);
+      padding: 0.3rem 0.65rem;
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+    }
+
+    .auth-card-wrap {
+      width: 100%;
+      max-width: 430px;
+      margin: clamp(1.75rem, 4vh, 3rem) auto;
+    }
+
+    .auth-heading {
+      margin-bottom: 1.5rem;
+    }
+
+    .auth-heading h1 {
+      font-size: clamp(1.75rem, 2.8vw, 2.25rem);
+      font-weight: 800;
+      margin-bottom: 0.45rem;
+    }
+
+    .auth-heading p {
+      font-size: 0.94rem;
+      color: var(--text-secondary);
+    }
+
+    /* Mode Segmented Switcher */
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.3rem;
+      padding: 0.3rem;
+      background: var(--surface-inset);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      margin-bottom: 1.35rem;
+    }
+
+    .auth-tab {
+      min-height: 40px;
+      padding: 0.35rem 0.5rem;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 140ms var(--ease-fast);
+    }
+
+    .auth-tab:hover {
+      color: var(--text-primary);
+    }
+
+    .auth-tab[aria-selected="true"] {
+      background: var(--surface-card-alt);
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+    }
+
+    /* OAuth Row */
+    .oauth-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.65rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .btn-oauth {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      min-height: 44px;
+      padding: 0 0.85rem;
+      background: var(--surface-card);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 140ms var(--ease-fast), border-color 140ms var(--ease-fast), transform 120ms var(--ease-fast);
+    }
+
+    .btn-oauth:hover {
+      background: var(--surface-hover);
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    .btn-oauth:active {
+      transform: scale(0.98);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      margin: 1.25rem 0;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border-subtle);
+    }
+
+    /* Form Controls */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.42rem;
+      margin-bottom: 1.05rem;
+    }
+
+    .label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .form-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .text-link-btn {
+      background: none;
+      border: none;
+      color: var(--accent-primary);
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0.2rem 0.25rem;
+      border-radius: 4px;
+    }
+
+    .text-link-btn:hover {
+      text-decoration: underline;
+    }
+
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .form-input {
+      width: 100%;
+      min-height: 46px;
+      padding: 0.65rem 0.95rem;
+      background: var(--surface-inset);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 0.94rem;
+      transition: border-color 150ms var(--ease-fast), box-shadow 150ms var(--ease-fast);
+    }
+
+    .form-input.has-toggle {
+      padding-right: 3rem;
+    }
+
+    .form-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16);
+    }
+
+    .form-input[aria-invalid="true"] {
+      border-color: var(--status-danger);
+      box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.14);
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 4px;
+      width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+    }
+
+    .password-toggle:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .form-error {
+      display: none;
+      align-items: center;
+      gap: 0.38rem;
+      font-size: 0.8rem;
+      color: #FDA4AF;
+    }
+
+    .form-error.visible {
+      display: flex;
+    }
+
+    /* Password Strength Meter (Signup Mode) */
+    .strength-meter {
+      display: none;
+      flex-direction: column;
+      gap: 0.35rem;
+      margin-top: 0.25rem;
+    }
+
+    .strength-meter.visible {
+      display: flex;
+    }
+
+    .strength-bars {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.3rem;
+      height: 4px;
+    }
+
+    .strength-bar {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      transition: background-color 180ms var(--ease-fast);
+    }
+
+    .strength-label {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    /* Remember Row */
+    .remember-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .checkbox-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      min-height: 44px;
+      font-size: 0.86rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent-primary);
+      cursor: pointer;
+    }
+
+    .demo-fill-btn {
+      min-height: 36px;
+      padding: 0.25rem 0.65rem;
+      background: var(--accent-primary-soft);
+      border: 1px solid var(--accent-primary-border);
+      border-radius: 999px;
+      color: #34D399;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 140ms var(--ease-fast), transform 120ms var(--ease-fast);
+    }
+
+    .demo-fill-btn:hover {
+      background: rgba(16, 185, 129, 0.2);
+    }
+
+    .demo-fill-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* Primary Submit Button */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      min-height: 46px;
+      padding: 0 1.25rem;
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 0.94rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 150ms var(--ease-fast);
+    }
+
+    .btn:active {
+      transform: scale(0.985);
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: var(--accent-primary);
+      color: #04130D;
+      border-color: var(--accent-primary);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-primary-hover);
+      border-color: var(--accent-primary-hover);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
+    .btn-secondary {
+      background: var(--surface-card);
+      color: var(--text-primary);
+      border-color: var(--border-strong);
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface-hover);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border-color: var(--border-subtle);
+    }
+
+    .btn-ghost:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    /* Authenticated State Card (replaces form on successful login) */
+    .auth-success-panel {
+      display: none;
+      background: var(--surface-card);
+      border: 1px solid var(--accent-primary-border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      animation: fadeUp 320ms var(--ease-out) both;
+    }
+
+    .auth-success-panel.visible {
+      display: block;
+    }
+
+    .session-meta-box {
+      margin: 1rem 0 1.25rem;
+      padding: 0.85rem 1rem;
+      background: var(--surface-inset);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      line-height: 1.65;
+      color: var(--text-secondary);
+    }
+
+    .auth-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .auth-footer-links {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .auth-footer-links button {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      min-height: 36px;
+    }
+
+    .auth-footer-links button:hover {
+      color: var(--text-primary);
+    }
+
+    /* ---------------- RIGHT PANEL: Architectural Workspace Preview ---------------- */
+    .auth-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: clamp(1.75rem, 4vw, 3.25rem);
+      background: linear-gradient(155deg, rgba(16, 185, 129, 0.05) 0%, rgba(14, 19, 29, 0.92) 42%, rgba(9, 12, 18, 0.96) 100%);
+      min-width: 0;
+    }
+
+    .right-header {
+      max-width: 52ch;
+      margin-bottom: 2rem;
+    }
+
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-primary);
+      margin-bottom: 0.8rem;
+    }
+
+    .right-header h2 {
+      font-size: clamp(1.55rem, 2.6vw, 2.15rem);
+      font-weight: 700;
+      margin-bottom: 0.65rem;
+    }
+
+    .right-header p {
+      font-size: 0.94rem;
+      color: var(--text-secondary);
+    }
+
+    /* Interactive Workspace Preview Card */
+    .workspace-preview {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-elevated);
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    .wp-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding: 0.85rem 1.15rem;
+      background: var(--surface-card);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .repo-switcher {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .repo-pill {
+      min-height: 34px;
+      padding: 0.22rem 0.65rem;
+      border-radius: 999px;
+      background: var(--surface-inset);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      cursor: pointer;
+      transition: all 140ms var(--ease-fast);
+    }
+
+    .repo-pill:hover {
+      color: var(--text-primary);
+      border-color: var(--border-strong);
+    }
+
+    .repo-pill[aria-pressed="true"] {
+      background: var(--accent-primary-soft);
+      border-color: var(--accent-primary-border);
+      color: #34D399;
+      font-weight: 600;
+    }
+
+    .wp-body {
+      padding: 1.25rem;
+    }
+
+    .wp-kpi-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.65rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .wp-kpi {
+      padding: 0.75rem 0.85rem;
+      background: var(--surface-inset);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      min-width: 0;
+    }
+
+    .wp-kpi-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .wp-kpi-val {
+      font-family: var(--font-mono);
+      font-size: 1.02rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .audit-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .audit-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.7rem 0.9rem;
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+    }
+
+    .audit-left {
+      min-width: 0;
+    }
+
+    .audit-path {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .audit-note {
+      font-size: 0.76rem;
+      color: var(--text-secondary);
+      margin-top: 0.12rem;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
+    }
+
+    .pill-mandatory {
+      background: var(--accent-primary-soft);
+      color: #34D399;
+      border: 1px solid var(--accent-primary-border);
+    }
+
+    .pill-recommended {
+      background: var(--status-warning-soft);
+      color: #FBBF24;
+      border: 1px solid var(--status-warning-border);
+    }
+
+    .pill-deferred {
+      background: var(--status-deferred-soft);
+      color: #7DD3FC;
+      border: 1px solid var(--status-deferred-border);
+    }
+
+    .security-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0.7rem 0.9rem;
+      background: var(--surface-inset);
+      border: 1px solid var(--accent-primary-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: #6EE7B7;
+    }
+
+    /* Trust Footer on Right Panel */
+    .trust-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.85rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.55rem;
+      min-width: 0;
+    }
+
+    .trust-item svg {
+      color: var(--accent-primary);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .trust-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .trust-sub {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    /* ==========================================================================
+       Modal (Forgot Password) & Toast
+       ========================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: rgba(4, 7, 12, 0.78);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-panel {
+      width: 100%;
+      max-width: 440px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-elevated);
+      overflow: hidden;
+      animation: fadeUp 180ms var(--ease-out);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.1rem 1.3rem;
+      background: var(--surface-card);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .modal-close {
+      width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+    }
+
+    .modal-close:hover {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 1.3rem;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 95;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.85rem 1.15rem;
+      background: var(--surface-card-alt);
+      border: 1px solid var(--accent-primary-border);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-size: 0.88rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-elevated);
+      transform: translateY(16px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 200ms var(--ease-out), opacity 180ms var(--ease-fast);
+    }
+
+    .toast.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      animation: fadeUp 420ms var(--ease-out) both;
+      animation-delay: calc(var(--stagger, 0) * 60ms);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(4, 19, 13, 0.25);
+      border-top-color: #04130D;
+      border-radius: 50%;
+      animation: spin 650ms linear infinite;
+    }
+
+    /* ==========================================================================
+       Responsive Breakpoints
+       ========================================================================== */
+    @media (max-width: 1024px) {
+      .auth-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .auth-left {
+        border-right: none;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+
+      .trust-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .oauth-grid,
+      .wp-kpi-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="noise-overlay" aria-hidden="true"></div>
+
+  <main class="auth-layout">
+    <!-- ==================== LEFT COLUMN: AUTHENTICATION ==================== -->
+    <section class="auth-left" aria-label="User authentication">
+      <header class="auth-topbar">
+        <a href="#top" class="brand-link" id="brandHomeBtn" aria-label="ArchTier Home">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+            <rect x="2" y="2" width="24" height="24" rx="6" fill="#121825" stroke="rgba(16,185,129,0.45)" stroke-width="1.5"/>
+            <path d="M7 18.5H21" stroke="#10B981" stroke-width="2" stroke-linecap="round"/>
+            <path d="M9.5 14H18.5" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+            <path d="M12 9.5H16" stroke="#38BDF8" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span>ArchTier</span>
+          <span class="brand-badge">v2.4</span>
+        </a>
+
+        <div class="engine-status">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span>Engine Online</span>
+        </div>
+      </header>
+
+      <div class="auth-card-wrap">
+        <div class="auth-heading reveal" style="--stagger: 0;">
+          <h1 id="authTitle">Welcome back, architect.</h1>
+          <p id="authSubtitle">Sign in to access your saved phase guardrails, repo audits, and agent prompts.</p>
+        </div>
+
+        <!-- Auth Mode Switcher -->
+        <div class="auth-tabs reveal" role="tablist" aria-label="Authentication method" style="--stagger: 1;">
+          <button type="button" class="auth-tab" role="tab" data-mode="signin" aria-selected="true">Sign In</button>
+          <button type="button" class="auth-tab" role="tab" data-mode="magic" aria-selected="false">Magic Link</button>
+          <button type="button" class="auth-tab" role="tab" data-mode="signup" aria-selected="false">Register</button>
+        </div>
+
+        <!-- Auth Form Container -->
+        <div id="authFormContainer" class="reveal" style="--stagger: 2;">
+          <div class="oauth-grid">
+            <button type="button" class="btn-oauth" data-oauth="GitHub">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.77.11 3.06.74.8 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.26 5.68.41.36.78 1.06.78 2.14 0 1.54-.01 2.79-.01 3.17 0 .31.21.67.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/>
+              </svg>
+              <span>GitHub</span>
+            </button>
+            <button type="button" class="btn-oauth" data-oauth="Google">
+              <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#EA4335" d="M12 5.04c1.64 0 3.11.56 4.27 1.67l3.2-3.2C17.53 1.7 15 1 12 1 7.36 1 3.36 3.66 1.43 7.53l3.73 2.9C6.04 7.75 8.77 5.04 12 5.04Z"/>
+                <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.55-.2-2.27H12v4.51h6.45a5.52 5.52 0 0 1-2.39 3.62l3.69 2.86c2.16-1.99 3.74-4.92 3.74-8.72Z"/>
+                <path fill="#FBBC05" d="M5.16 14.43a6.94 6.94 0 0 1 0-4.86l-3.73-2.9a11.49 11.49 0 0 0 0 10.66l3.73-2.9Z"/>
+                <path fill="#34A853" d="M12 23c3.1 0 5.71-1.03 7.61-2.79l-3.69-2.86c-1.03.69-2.34 1.1-3.92 1.1-3.23 0-5.96-2.71-6.84-5.39l-3.73 2.9C3.36 20.34 7.36 23 12 23Z"/>
+              </svg>
+              <span>Google</span>
+            </button>
+          </div>
+
+          <div class="divider">or continue with email</div>
+
+          <form id="loginForm" novalidate>
+            <div class="form-group" id="nameGroup" style="display: none;">
+              <label class="form-label" for="fullName">Full Name</label>
+              <input type="text" class="form-input" id="fullName" name="name" autocomplete="name" placeholder="Alex Rivera" />
+              <span class="form-error" id="nameError" role="alert">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                <span>Enter your name to create a workspace profile.</span>
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="emailInput">Work or Developer Email</label>
+              <input type="email" class="form-input" id="emailInput" name="email" autocomplete="email" placeholder="you@company.dev" required />
+              <span class="form-error" id="emailError" role="alert">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                <span>Please enter a valid email address.</span>
+              </span>
+            </div>
+
+            <div class="form-group" id="passwordGroup">
+              <div class="label-row">
+                <label class="form-label" for="passwordInput">Password</label>
+                <button type="button" class="text-link-btn" id="openResetBtn">Forgot password?</button>
+              </div>
+              <div class="input-wrap">
+                <input type="password" class="form-input has-toggle" id="passwordInput" name="password" autocomplete="current-password" placeholder="Enter your password" required />
+                <button type="button" class="password-toggle" id="togglePwdBtn" aria-label="Show password" aria-pressed="false">
+                  <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+              </div>
+              <span class="form-error" id="passwordError" role="alert">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                <span>Password must be at least 8 characters.</span>
+              </span>
+
+              <div class="strength-meter" id="strengthMeter" aria-live="polite">
+                <div class="strength-bars">
+                  <span class="strength-bar" id="bar1"></span>
+                  <span class="strength-bar" id="bar2"></span>
+                  <span class="strength-bar" id="bar3"></span>
+                  <span class="strength-bar" id="bar4"></span>
+                </div>
+                <span class="strength-label" id="strengthLabel">Strength: enter 8+ characters</span>
+              </div>
+            </div>
+
+            <div class="remember-row">
+              <label class="checkbox-label">
+                <input type="checkbox" id="rememberSession" checked />
+                <span>Keep session active for 30 days</span>
+              </label>
+              <button type="button" class="demo-fill-btn" id="demoFillBtn">Fill Demo Account</button>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full" id="submitBtn">
+              <span id="submitBtnText">Sign In to Workspace</span>
+              <svg id="submitBtnArrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                <path d="M5 12h14M13 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </form>
+        </div>
+
+        <!-- Authenticated Confirmation Panel (Interactive Preview State) -->
+        <div class="auth-success-panel" id="authSuccessPanel" aria-live="polite">
+          <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.55rem;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.4" aria-hidden="true">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
+            </svg>
+            <h2 style="font-size: 1.25rem;" id="successTitle">Session Authenticated</h2>
+          </div>
+          <p style="font-size: 0.9rem; color: var(--text-secondary);" id="successDesc">
+            Your developer session is verified and ready to route into the ArchTier Guardrail Dashboard.
+          </p>
+          <div class="session-meta-box" id="sessionMetaBox"></div>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.65rem;">
+            <button type="button" class="btn btn-primary" id="continueDashBtn">Open Dashboard Preview</button>
+            <button type="button" class="btn btn-secondary" id="signOutBtn">Sign Out &amp; Test Again</button>
+          </div>
+        </div>
+      </div>
+
+      <footer class="auth-footer">
+        <span>© 2026 ArchTier · Zero-Drift Guardrails</span>
+        <div class="auth-footer-links">
+          <button type="button" id="securityInfoBtn">Security Floor</button>
+          <button type="button" id="ssoHelpBtn">Enterprise SSO</button>
+        </div>
+      </footer>
+    </section>
+
+    <!-- ==================== RIGHT COLUMN: WORKSPACE SNAPSHOT ==================== -->
+    <aside class="auth-right" aria-label="Workspace guardrails preview">
+      <div>
+        <div class="right-header reveal" style="--stagger: 1;">
+          <div class="kicker">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span>Live Guardrail Workspace</span>
+          </div>
+          <h2>Pick up right where your codebase left off.</h2>
+          <p>
+            Every repository remembers its active phase, locked security rules, and deferred abstractions—so your AI coding agents never drift between sessions.
+          </p>
+        </div>
+
+        <div class="workspace-preview reveal" style="--stagger: 2;">
+          <div class="wp-topbar">
+            <div class="repo-switcher" role="group" aria-label="Preview workspace repository">
+              <button type="button" class="repo-pill" data-repo="archtier-core" aria-pressed="true">archtier-core</button>
+              <button type="button" class="repo-pill" data-repo="saas-billing" aria-pressed="false">saas-billing</button>
+              <button type="button" class="repo-pill" data-repo="indie-mvp" aria-pressed="false">indie-mvp</button>
+            </div>
+            <span class="status-pill pill-mandatory" id="wpPhaseBadge">MVP PHASE</span>
+          </div>
+
+          <div class="wp-body">
+            <div class="wp-kpi-row">
+              <div class="wp-kpi">
+                <div class="wp-kpi-label">Compliance</div>
+                <div class="wp-kpi-val tabular" id="wpCompliance" style="color: var(--accent-primary);">98.4%</div>
+              </div>
+              <div class="wp-kpi">
+                <div class="wp-kpi-label">Active Rules</div>
+                <div class="wp-kpi-val tabular" id="wpRules">3 Locked</div>
+              </div>
+              <div class="wp-kpi">
+                <div class="wp-kpi-label">Deferred</div>
+                <div class="wp-kpi-val tabular" id="wpDeferred">2 Skipped</div>
+              </div>
+            </div>
+
+            <div class="audit-feed" id="wpAuditFeed" aria-live="polite">
+              <!-- Populated by JS -->
+            </div>
+
+            <div class="security-strip">
+              <span>Security Floor: Zod + Env Secrets + Strict Types</span>
+              <span>VERIFIED</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="trust-row reveal" style="--stagger: 3;">
+        <div class="trust-item">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <div>
+            <div class="trust-title">Zero Code Storage</div>
+            <div class="trust-sub">Only schema metadata &amp; rule presets sync.</div>
+          </div>
+        </div>
+        <div class="trust-item">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+          <div>
+            <div class="trust-title">Agent-Ready Tokens</div>
+            <div class="trust-sub">Sync rules directly to Cursor &amp; Antigravity.</div>
+          </div>
+        </div>
+        <div class="trust-item">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M20 6 9 17l-5-5"/>
+          </svg>
+          <div>
+            <div class="trust-title">Deterministic Rules</div>
+            <div class="trust-sub">Auditable JSON contracts per phase tier.</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- ==================== FORGOT PASSWORD MODAL ==================== -->
+  <div class="modal-backdrop" id="resetModal" role="dialog" aria-modal="true" aria-labelledby="resetTitle">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h3 id="resetTitle" style="font-size: 1.05rem;">Reset Your Password</h3>
+        <button type="button" class="modal-close" id="closeResetBtn" aria-label="Close password reset modal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.1rem;">
+          Enter the email associated with your ArchTier account. We will send a single-use recovery link valid for 15 minutes.
+        </p>
+        <form id="resetForm" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="resetEmail">Account Email</label>
+            <input type="email" class="form-input" id="resetEmail" autocomplete="email" placeholder="you@company.dev" required />
+            <span class="form-error" id="resetEmailError" role="alert">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+              <span>Please enter a valid email address.</span>
+            </span>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.6rem;">
+            <button type="button" class="btn btn-ghost" id="cancelResetBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary">Send Recovery Link</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST NOTIFICATION ==================== -->
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+    <span id="toastText">Notification</span>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ---------------- Workspace Preview Data ---------------- */
+      const REPO_DATA = {
+        'archtier-core': {
+          phase: 'MVP PHASE',
+          pillClass: 'pill-mandatory',
+          compliance: '98.4%',
+          rules: '3 Locked',
+          deferred: '2 Skipped',
+          audits: [
+            { path: '/src/app/api/analyze/route.ts', note: 'Zod boundary & strict return types verified', status: 'LOCKED', cls: 'pill-mandatory' },
+            { path: '/src/lib/engine/evaluate-guardrails.ts', note: 'Pure domain evaluator · 0 external side effects', status: 'PASSED', cls: 'pill-mandatory' },
+            { path: '/src/lib/db/repositories/*', note: 'Repository DI deferred until Growth tier', status: 'DEFERRED', cls: 'pill-deferred' }
+          ]
+        },
+        'saas-billing': {
+          phase: 'GROWTH PHASE',
+          pillClass: 'pill-recommended',
+          compliance: '96.1%',
+          rules: '4 Locked',
+          deferred: '1 Skipped',
+          audits: [
+            { path: '/src/app/api/webhooks/stripe/route.ts', note: 'HMAC signature & env secret isolation locked', status: 'LOCKED', cls: 'pill-mandatory' },
+            { path: '/tests/integration/billing.test.ts', note: 'Idempotency & retry suite passed (14/14)', status: 'PASSED', cls: 'pill-mandatory' },
+            { path: '/src/lib/events/billing-bus.ts', note: 'Distributed event bus deferred to Scale', status: 'DEFERRED', cls: 'pill-deferred' }
+          ]
+        },
+        'indie-mvp': {
+          phase: 'MVP PHASE',
+          pillClass: 'pill-mandatory',
+          compliance: '100%',
+          rules: '3 Locked',
+          deferred: '3 Skipped',
+          audits: [
+            { path: '/src/lib/schemas/user.schema.ts', note: 'Shared client/server Zod contract active', status: 'LOCKED', cls: 'pill-mandatory' },
+            { path: '/src/app/api/auth/route.ts', note: 'Rate-limit & safe error sanitizer verified', status: 'PASSED', cls: 'pill-mandatory' },
+            { path: '/src/domain/mappers/dto.ts', note: 'Multi-layer DTO mappers skipped (anti-slop)', status: 'DEFERRED', cls: 'pill-deferred' }
+          ]
+        }
+      };
+
+      let currentMode = 'signin';
+      let activeRepo = 'archtier-core';
+      let toastTimer = null;
+
+      /* ---------------- Toast Helper ---------------- */
+      const toastEl = document.getElementById('toast');
+      const toastText = document.getElementById('toastText');
+
+      function showToast(msg) {
+        toastText.textContent = msg;
+        toastEl.classList.add('visible');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          toastEl.classList.remove('visible');
+        }, 2800);
+      }
+
+      /* ---------------- Right Panel Repo Preview ---------------- */
+      const wpPhaseBadge = document.getElementById('wpPhaseBadge');
+      const wpCompliance = document.getElementById('wpCompliance');
+      const wpRules = document.getElementById('wpRules');
+      const wpDeferred = document.getElementById('wpDeferred');
+      const wpAuditFeed = document.getElementById('wpAuditFeed');
+
+      function renderRepoPreview() {
+        const data = REPO_DATA[activeRepo];
+        wpPhaseBadge.textContent = data.phase;
+        wpPhaseBadge.className = 'status-pill ' + data.pillClass;
+        wpCompliance.textContent = data.compliance;
+        wpRules.textContent = data.rules;
+        wpDeferred.textContent = data.deferred;
+
+        wpAuditFeed.innerHTML = data.audits.map(function (item) {
+          return (
+            '<div class="audit-item">' +
+              '<div class="audit-left">' +
+                '<div class="audit-path">' + item.path + '</div>' +
+                '<div class="audit-note">' + item.note + '</div>' +
+              '</div>' +
+              '<span class="status-pill ' + item.cls + '">' + item.status + '</span>' +
+            '</div>'
+          );
+        }).join('');
+
+        document.querySelectorAll('.repo-pill').forEach(function (btn) {
+          btn.setAttribute('aria-pressed', String(btn.dataset.repo === activeRepo));
+        });
+      }
+
+      document.querySelectorAll('.repo-pill').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          activeRepo = btn.dataset.repo;
+          renderRepoPreview();
+        });
+      });
+
+      /* ---------------- Auth Mode Switching ---------------- */
+      const authTitle = document.getElementById('authTitle');
+      const authSubtitle = document.getElementById('authSubtitle');
+      const nameGroup = document.getElementById('nameGroup');
+      const passwordGroup = document.getElementById('passwordGroup');
+      const openResetBtn = document.getElementById('openResetBtn');
+      const strengthMeter = document.getElementById('strengthMeter');
+      const submitBtnText = document.getElementById('submitBtnText');
+      const authFormContainer = document.getElementById('authFormContainer');
+      const authSuccessPanel = document.getElementById('authSuccessPanel');
+
+      function setMode(mode) {
+        currentMode = mode;
+        authFormContainer.style.display = 'block';
+        authSuccessPanel.classList.remove('visible');
+        clearErrors();
+
+        document.querySelectorAll('.auth-tab').forEach(function (tab) {
+          tab.setAttribute('aria-selected', String(tab.dataset.mode === mode));
+        });
+
+        if (mode === 'signin') {
+          authTitle.textContent = 'Welcome back, architect.';
+          authSubtitle.textContent = 'Sign in to access your saved phase guardrails, repo audits, and agent prompts.';
+          nameGroup.style.display = 'none';
+          passwordGroup.style.display = 'flex';
+          openResetBtn.style.display = 'inline-block';
+          strengthMeter.classList.remove('visible');
+          submitBtnText.textContent = 'Sign In to Workspace';
+        } else if (mode === 'magic') {
+          authTitle.textContent = 'Passwordless sign in.';
+          authSubtitle.textContent = 'We will dispatch a single-use cryptographic sign-in link to your developer inbox.';
+          nameGroup.style.display = 'none';
+          passwordGroup.style.display = 'none';
+          strengthMeter.classList.remove('visible');
+          submitBtnText.textContent = 'Send Magic Link';
+        } else {
+          authTitle.textContent = 'Create your workspace.';
+          authSubtitle.textContent = 'Start free on Solo MVP—lock your security floor in under 60 seconds.';
+          nameGroup.style.display = 'flex';
+          passwordGroup.style.display = 'flex';
+          openResetBtn.style.display = 'none';
+          strengthMeter.classList.add('visible');
+          submitBtnText.textContent = 'Create ArchTier Account';
+        }
+      }
+
+      document.querySelectorAll('.auth-tab').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          setMode(tab.dataset.mode);
+        });
+      });
+
+      /* ---------------- Form Elements & Validation ---------------- */
+      const loginForm = document.getElementById('loginForm');
+      const fullName = document.getElementById('fullName');
+      const emailInput = document.getElementById('emailInput');
+      const passwordInput = document.getElementById('passwordInput');
+      const nameError = document.getElementById('nameError');
+      const emailError = document.getElementById('emailError');
+      const passwordError = document.getElementById('passwordError');
+      const submitBtn = document.getElementById('submitBtn');
+
+      function clearErrors() {
+        [nameError, emailError, passwordError].forEach(function (el) { el.classList.remove('visible'); });
+        [fullName, emailInput, passwordInput].forEach(function (el) { el.removeAttribute('aria-invalid'); });
+      }
+
+      function isValidEmail(val) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+      }
+
+      /* Password Visibility Toggle */
+      const togglePwdBtn = document.getElementById('togglePwdBtn');
+      const eyeIcon = document.getElementById('eyeIcon');
+
+      togglePwdBtn.addEventListener('click', function () {
+        const isHidden = passwordInput.type === 'password';
+        passwordInput.type = isHidden ? 'text' : 'password';
+        togglePwdBtn.setAttribute('aria-pressed', String(isHidden));
+        togglePwdBtn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+        eyeIcon.innerHTML = isHidden
+          ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
+          : '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>';
+      });
+
+      /* Password Strength Meter */
+      const bars = [
+        document.getElementById('bar1'),
+        document.getElementById('bar2'),
+        document.getElementById('bar3'),
+        document.getElementById('bar4')
+      ];
+      const strengthLabel = document.getElementById('strengthLabel');
+
+      function updateStrength(pwd) {
+        let score = 0;
+        if (pwd.length >= 8) score++;
+        if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
+        if (/[0-9]/.test(pwd)) score++;
+        if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
+        const colors = ['#F43F5E', '#F59E0B', '#38BDF8', '#10B981'];
+        const labels = ['Weak — add uppercase & numbers', 'Fair — add a symbol', 'Strong — good to ship', 'Excellent — hardened credential'];
+
+        bars.forEach(function (bar, i) {
+          bar.style.backgroundColor = i < score ? colors[score - 1] : 'rgba(255, 255, 255, 0.1)';
+        });
+        strengthLabel.textContent = score === 0 ? 'Strength: enter 8+ characters' : 'Strength: ' + labels[score - 1];
+      }
+
+      passwordInput.addEventListener('input', function () {
+        if (currentMode === 'signup') updateStrength(passwordInput.value);
+        if (passwordInput.value.length >= 8) {
+          passwordError.classList.remove('visible');
+          passwordInput.removeAttribute('aria-invalid');
+        }
+      });
+
+      emailInput.addEventListener('blur', function () {
+        if (emailInput.value.trim() && isValidEmail(emailInput.value.trim())) {
+          emailError.classList.remove('visible');
+          emailInput.removeAttribute('aria-invalid');
+        }
+      });
+
+      /* Demo Fill Button */
+      document.getElementById('demoFillBtn').addEventListener('click', function () {
+        if (currentMode === 'signup') fullName.value = 'Alex Rivera';
+        emailInput.value = 'alex@archtier.dev';
+        passwordInput.value = 'ArchTier#2026!';
+        if (currentMode === 'signup') updateStrength(passwordInput.value);
+        clearErrors();
+        showToast('Demo developer credentials filled');
+      });
+
+      /* Complete Auth Transition */
+      const successTitle = document.getElementById('successTitle');
+      const successDesc = document.getElementById('successDesc');
+      const sessionMetaBox = document.getElementById('sessionMetaBox');
+
+      function completeAuth(provider, email) {
+        submitBtn.disabled = false;
+        authFormContainer.style.display = 'none';
+        authSuccessPanel.classList.add('visible');
+
+        if (currentMode === 'magic' && provider === 'Email') {
+          successTitle.textContent = 'Magic Link Dispatched';
+          successDesc.textContent = 'Check your inbox to complete one-click authentication into your workspace.';
+          sessionMetaBox.textContent =
+            'recipient : ' + email + '\n' +
+            'method    : passwordless-magic-link\n' +
+            'expires   : 15 minutes (single-use)';
+        } else {
+          successTitle.textContent = 'Session Authenticated';
+          successDesc.textContent = 'Your session is active and synced with your repository guardrails.';
+          sessionMetaBox.textContent =
+            'identity  : ' + email + '\n' +
+            'provider  : ' + provider + '\n' +
+            'workspace : ' + activeRepo + ' (' + REPO_DATA[activeRepo].phase + ')\n' +
+            'session   : jwt_verified · security_floor=LOCKED';
+        }
+        showToast('Authenticated via ' + provider);
+      }
+
+      /* Form Submit */
+      loginForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        clearErrors();
+
+        let valid = true;
+        const emailVal = emailInput.value.trim();
+
+        if (currentMode === 'signup' && fullName.value.trim().length < 2) {
+          nameError.classList.add('visible');
+          fullName.setAttribute('aria-invalid', 'true');
+          valid = false;
+        }
+
+        if (!isValidEmail(emailVal)) {
+          emailError.classList.add('visible');
+          emailInput.setAttribute('aria-invalid', 'true');
+          valid = false;
+        }
+
+        if (currentMode !== 'magic' && passwordInput.value.length < 8) {
+          passwordError.classList.add('visible');
+          passwordInput.setAttribute('aria-invalid', 'true');
+          valid = false;
+        }
+
+        if (!valid) return;
+
+        submitBtn.disabled = true;
+        const originalLabel = submitBtnText.textContent;
+        submitBtnText.textContent = 'Verifying credentials...';
+
+        setTimeout(function () {
+          submitBtnText.textContent = originalLabel;
+          completeAuth('Email', emailVal);
+        }, 420);
+      });
+
+      /* OAuth Buttons */
+      document.querySelectorAll('.btn-oauth').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const provider = btn.dataset.oauth;
+          showToast('Connecting with ' + provider + '...');
+          setTimeout(function () {
+            completeAuth(provider + ' OAuth', 'alex@archtier.dev');
+          }, 380);
+        });
+      });
+
+      /* Authenticated State Actions */
+      document.getElementById('signOutBtn').addEventListener('click', function () {
+        setMode(currentMode);
+        showToast('Signed out · Returned to login view');
+      });
+
+      document.getElementById('continueDashBtn').addEventListener('click', function () {
+        showToast('Ready to slice the Dashboard screen next!');
+      });
+
+      /* Footer & Brand Buttons */
+      document.getElementById('brandHomeBtn').addEventListener('click', function (e) {
+        e.preventDefault();
+        showToast('ArchTier v2.4 · Login Screen Mockup');
+      });
+
+      document.getElementById('securityInfoBtn').addEventListener('click', function () {
+        showToast('Security Floor: Zod validation, env secrets & strict TS always active');
+      });
+
+      document.getElementById('ssoHelpBtn').addEventListener('click', function () {
+        showToast('SAML 2.0 / Okta SSO available on Scale Org workspaces');
+      });
+
+      /* ---------------- Forgot Password Modal ---------------- */
+      const resetModal = document.getElementById('resetModal');
+      const resetEmail = document.getElementById('resetEmail');
+      const resetEmailError = document.getElementById('resetEmailError');
+
+      function closeResetModal() {
+        resetModal.classList.remove('open');
+      }
+
+      document.getElementById('openResetBtn').addEventListener('click', function () {
+        resetEmail.value = emailInput.value.trim();
+        resetEmailError.classList.remove('visible');
+        resetModal.classList.add('open');
+        setTimeout(function () { resetEmail.focus(); }, 60);
+      });
+
+      document.getElementById('closeResetBtn').addEventListener('click', closeResetModal);
+      document.getElementById('cancelResetBtn').addEventListener('click', closeResetModal);
+
+      resetModal.addEventListener('click', function (e) {
+        if (e.target === resetModal) closeResetModal();
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeResetModal();
+      });
+
+      document.getElementById('resetForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const val = resetEmail.value.trim();
+        if (!isValidEmail(val)) {
+          resetEmailError.classList.add('visible');
+          resetEmail.focus();
+          return;
+        }
+        resetEmailError.classList.remove('visible');
+        closeResetModal();
+        showToast('Recovery link sent to ' + val);
+      });
+
+      /* ---------------- Init ---------------- */
+      renderRepoPreview();
+    })();
+  </script>
+</body>
+</html>

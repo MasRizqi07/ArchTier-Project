@@ -1,0 +1,2563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArchTier — Adaptive Architecture Guardrails Without Over-Engineering</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ==========================================================================
+       ArchTier Design System Tokens (UI/UX Pro Max + Architectural Dark)
+       Dials -> Variance: 7/10 | Motion: 6/10 | Density: 5/10
+       ========================================================================== */
+    :root {
+      --bg-primary: #090C12;
+      --bg-elevated: #0E131D;
+      --surface-card: #121825;
+      --surface-card-alt: #161E2E;
+      --surface-hover: #1C263A;
+      --surface-inset: #0A0E16;
+
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+
+      --accent-primary: #10B981;
+      --accent-primary-hover: #059669;
+      --accent-primary-soft: rgba(16, 185, 129, 0.12);
+      --accent-primary-border: rgba(16, 185, 129, 0.32);
+
+      --status-warning: #F59E0B;
+      --status-warning-soft: rgba(245, 158, 11, 0.12);
+      --status-warning-border: rgba(245, 158, 11, 0.30);
+
+      --status-deferred: #38BDF8;
+      --status-deferred-soft: rgba(56, 189, 248, 0.11);
+      --status-deferred-border: rgba(56, 189, 248, 0.28);
+
+      --status-danger: #F43F5E;
+      --status-danger-soft: rgba(244, 63, 94, 0.12);
+      --status-danger-border: rgba(244, 63, 94, 0.30);
+
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+
+      --font-display: 'Bricolage Grotesque', system-ui, -apple-system, sans-serif;
+      --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+      --space-section: clamp(4rem, 7.5vw, 6.75rem);
+      --space-card: 1.5rem;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 18px;
+
+      --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.28);
+      --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.45), 0 24px 64px rgba(0, 0, 0, 0.55);
+
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      --ease-fast: cubic-bezier(0.2, 0, 0, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    body {
+      position: relative;
+      min-height: 100vh;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      overflow-x: hidden;
+    }
+
+    /* Atmospheric Blueprint Grid + Subtle Top Emerald Radial Glow */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        radial-gradient(ellipse 75% 45% at 65% -5%, rgba(16, 185, 129, 0.10), transparent 65%),
+        radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.045) 1px, transparent 0);
+      background-size: 100% 100%, 28px 28px;
+    }
+
+    /* Fine SVG Noise Overlay */
+    .noise-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    .page-shell {
+      position: relative;
+      z-index: 2;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 0 clamp(1.25rem, 4vw, 2rem);
+    }
+
+    /* Typography */
+    h1, h2, h3, h4 {
+      font-family: var(--font-display);
+      letter-spacing: -0.03em;
+      line-height: 1.12;
+      text-wrap: balance;
+      color: var(--text-primary);
+    }
+
+    h1 {
+      font-size: clamp(2.35rem, 4.8vw, 3.85rem);
+      font-weight: 800;
+    }
+
+    h2 {
+      font-size: clamp(1.85rem, 3.2vw, 2.7rem);
+      font-weight: 700;
+    }
+
+    h3 {
+      font-size: clamp(1.2rem, 1.8vw, 1.45rem);
+      font-weight: 700;
+    }
+
+    p {
+      color: var(--text-secondary);
+    }
+
+    .mono {
+      font-family: var(--font-mono);
+    }
+
+    .tabular {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Accessible Focus Ring */
+    :focus-visible {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    /* Skip Link */
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: 1rem;
+      z-index: 100;
+      padding: 0.75rem 1rem;
+      background: var(--accent-primary);
+      color: #04130D;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+    }
+    .skip-link:focus {
+      top: 1rem;
+    }
+
+    /* ==========================================================================
+       Header & Navigation
+       ========================================================================== */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(9, 12, 18, 0.82);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      min-height: 68px;
+    }
+
+    .brand-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1.2rem;
+      letter-spacing: -0.03em;
+      min-height: 44px;
+    }
+
+    .brand-badge {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--accent-primary);
+      background: var(--accent-primary-soft);
+      border: 1px solid var(--accent-primary-border);
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      letter-spacing: 0.02em;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 0 0.85rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      transition: color 150ms var(--ease-fast), background-color 150ms var(--ease-fast);
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+      background-color: rgba(255, 255, 255, 0.04);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .kbd-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: 44px;
+      padding: 0 0.85rem;
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: border-color 150ms var(--ease-fast), color 150ms var(--ease-fast), transform 120ms var(--ease-fast);
+    }
+
+    .kbd-trigger:hover {
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+    }
+
+    .kbd-trigger:active {
+      transform: scale(0.98);
+    }
+
+    kbd {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      background: var(--surface-inset);
+      border: 1px solid var(--border-strong);
+      color: var(--text-secondary);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      min-height: 44px;
+      padding: 0 1.2rem;
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background-color 150ms var(--ease-fast), border-color 150ms var(--ease-fast), color 150ms var(--ease-fast), transform 120ms var(--ease-fast);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: var(--accent-primary);
+      color: #04130D;
+      border-color: var(--accent-primary);
+    }
+
+    .btn-primary:hover {
+      background: #14C98E;
+      border-color: #14C98E;
+    }
+
+    .btn-secondary {
+      background: var(--surface-card);
+      color: var(--text-primary);
+      border-color: var(--border-strong);
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface-hover);
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border-color: var(--border-subtle);
+    }
+
+    .btn-ghost:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.04);
+      border-color: var(--border-strong);
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .mobile-drawer {
+      display: none;
+      padding: 1rem 1.25rem 1.5rem;
+      border-top: 1px solid var(--border-subtle);
+      background: var(--bg-elevated);
+    }
+
+    .mobile-drawer.open {
+      display: block;
+    }
+
+    .mobile-drawer nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .mobile-drawer a {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 0 0.75rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+    }
+
+    .mobile-drawer a:hover {
+      background: var(--surface-card);
+      color: var(--text-primary);
+    }
+
+    /* ==========================================================================
+       Hero Section — Asymmetric Split with Live Phase Engine Preview
+       ========================================================================== */
+    .hero {
+      padding: clamp(3rem, 6vw, 5.25rem) 0 var(--space-section);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.02fr) minmax(0, 1.08fr);
+      gap: clamp(2rem, 4vw, 3.5rem);
+      align-items: start;
+    }
+
+    .hero-copy {
+      padding-top: 0.5rem;
+      min-width: 0;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      padding: 0.35rem 0.75rem;
+      margin-bottom: 1.5rem;
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-primary);
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18);
+      flex-shrink: 0;
+    }
+
+    .hero-title {
+      margin-bottom: 1.35rem;
+    }
+
+    .hero-title .accent-underline {
+      color: var(--accent-primary);
+      position: relative;
+      display: inline-block;
+    }
+
+    .hero-lead {
+      font-size: clamp(1.02rem, 1.3vw, 1.15rem);
+      line-height: 1.65;
+      max-width: 56ch;
+      margin-bottom: 2rem;
+    }
+
+    .hero-cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      padding-top: 1.75rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .metric-item {
+      min-width: 0;
+    }
+
+    .metric-value {
+      font-family: var(--font-display);
+      font-size: clamp(1.45rem, 2.2vw, 1.85rem);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.1;
+      margin-bottom: 0.25rem;
+    }
+
+    .metric-label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    /* Live Interactive Hero Simulator Card */
+    .simulator-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-elevated);
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .sim-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding: 0.9rem 1.25rem;
+      background: var(--surface-card);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .sim-window-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+
+    .sim-dots {
+      display: inline-flex;
+      gap: 5px;
+    }
+
+    .sim-dots span {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .sim-body {
+      padding: 1.25rem;
+    }
+
+    /* Phase Segmented Control */
+    .phase-selector {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.4rem;
+      padding: 0.35rem;
+      background: var(--surface-inset);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      margin-bottom: 1.15rem;
+    }
+
+    .phase-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.15rem;
+      min-height: 52px;
+      padding: 0.55rem 0.75rem;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-align: left;
+      transition: background-color 150ms var(--ease-fast), border-color 150ms var(--ease-fast), color 150ms var(--ease-fast);
+    }
+
+    .phase-btn:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .phase-btn[aria-pressed="true"] {
+      background: var(--surface-card-alt);
+      border-color: var(--accent-primary-border);
+      color: var(--text-primary);
+    }
+
+    .phase-btn-title {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .phase-btn-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .phase-btn[aria-pressed="true"] .phase-btn-title {
+      color: var(--accent-primary);
+    }
+
+    /* Feature Scenario Pills */
+    .scenario-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-bottom: 1.15rem;
+    }
+
+    .scenario-label {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      margin-right: 0.2rem;
+    }
+
+    .scenario-chip {
+      min-height: 34px;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      cursor: pointer;
+      transition: all 140ms var(--ease-fast);
+    }
+
+    .scenario-chip:hover {
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+    }
+
+    .scenario-chip[aria-pressed="true"] {
+      background: var(--accent-primary-soft);
+      border-color: var(--accent-primary-border);
+      color: var(--accent-primary);
+    }
+
+    /* Live Metrics Strip inside Simulator */
+    .sim-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.65rem;
+      margin-bottom: 1.15rem;
+    }
+
+    .sim-stat-box {
+      padding: 0.7rem 0.8rem;
+      background: var(--surface-inset);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      min-width: 0;
+    }
+
+    .sim-stat-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .sim-stat-val {
+      font-family: var(--font-mono);
+      font-size: 0.98rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Rule Output List */
+    .rule-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .rule-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.75rem 0.9rem;
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      transition: border-color 150ms var(--ease-fast), transform 180ms var(--ease-out);
+    }
+
+    .rule-row:hover {
+      border-color: var(--border-strong);
+    }
+
+    .rule-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .rule-name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.15rem;
+    }
+
+    .rule-reason {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.22rem 0.58rem;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      flex-shrink: 0;
+      text-transform: uppercase;
+    }
+
+    .pill-mandatory {
+      background: var(--accent-primary-soft);
+      color: #34D399;
+      border: 1px solid var(--accent-primary-border);
+    }
+
+    .pill-recommended {
+      background: var(--status-warning-soft);
+      color: #FBBF24;
+      border: 1px solid var(--status-warning-border);
+    }
+
+    .pill-deferred {
+      background: var(--status-deferred-soft);
+      color: #7DD3FC;
+      border: 1px solid var(--status-deferred-border);
+    }
+
+    .pill-danger {
+      background: var(--status-danger-soft);
+      color: #FDA4AF;
+      border: 1px solid var(--status-danger-border);
+    }
+
+    .sim-filepath-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0.7rem 0.9rem;
+      background: var(--surface-inset);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: var(--text-secondary);
+    }
+
+    .sim-filepath-bar code {
+      color: var(--accent-primary);
+      word-break: break-all;
+    }
+
+    /* ==========================================================================
+       Section Common Header
+       ========================================================================== */
+    .section {
+      padding: var(--space-section) 0;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .section-header {
+      max-width: 68ch;
+      margin-bottom: clamp(2rem, 4vw, 3.25rem);
+    }
+
+    .section-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-primary);
+      margin-bottom: 0.75rem;
+    }
+
+    .section-header p {
+      margin-top: 0.85rem;
+      font-size: 1.02rem;
+    }
+
+    /* ==========================================================================
+       Problem vs. Solution Architectural Diff
+       ========================================================================== */
+    .diff-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem;
+    }
+
+    .diff-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      min-width: 0;
+      box-shadow: var(--shadow-card);
+    }
+
+    .diff-card.is-recommended {
+      border-color: var(--accent-primary-border);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.05) 0%, var(--surface-card) 42%);
+    }
+
+    .diff-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1.15rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .tree-block {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.65;
+      background: var(--surface-inset);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.1rem;
+      overflow-x: auto;
+      color: var(--text-secondary);
+      margin-bottom: 1.1rem;
+    }
+
+    .tree-line-dim {
+      color: var(--text-muted);
+      text-decoration: line-through;
+    }
+
+    .tree-line-good {
+      color: #6EE7B7;
+    }
+
+    .tree-line-warn {
+      color: #FDA4AF;
+    }
+
+    .diff-footer-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+
+    /* ==========================================================================
+       Asymmetric Bento Grid (7/5 & 5/7)
+       ========================================================================== */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 1.25rem;
+    }
+
+    .bento-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.6rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.25rem;
+      min-width: 0;
+      box-shadow: var(--shadow-card);
+      transition: border-color 180ms var(--ease-fast);
+    }
+
+    .bento-card:hover {
+      border-color: var(--border-strong);
+    }
+
+    .span-7 { grid-column: span 7; }
+    .span-5 { grid-column: span 5; }
+
+    .bento-icon-wrap {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      background: var(--surface-card-alt);
+      border: 1px solid var(--border-subtle);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-primary);
+      margin-bottom: 0.9rem;
+    }
+
+    .bento-card h3 {
+      margin-bottom: 0.5rem;
+    }
+
+    .bento-card p {
+      font-size: 0.94rem;
+    }
+
+    /* Matrix Table inside Bento Card 1 */
+    .mini-matrix-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      background: var(--surface-inset);
+    }
+
+    .mini-matrix {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      text-align: left;
+    }
+
+    .mini-matrix th, .mini-matrix td {
+      padding: 0.65rem 0.8rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .mini-matrix tr:last-child td {
+      border-bottom: none;
+    }
+
+    .mini-matrix th {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Security Floor List inside Bento Card 2 */
+    .security-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .security-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.65rem 0.85rem;
+      background: var(--surface-inset);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      font-size: 0.84rem;
+      color: var(--text-primary);
+    }
+
+    .security-list-left {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      min-width: 0;
+    }
+
+    /* Conflict Terminal inside Bento Card 3 */
+    .conflict-terminal {
+      background: var(--surface-inset);
+      border: 1px solid var(--status-warning-border);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.55;
+    }
+
+    .conflict-tag {
+      color: var(--status-warning);
+      font-weight: 600;
+      margin-bottom: 0.45rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    /* 5-Section Contract Tabs inside Bento Card 4 */
+    .contract-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .contract-tab {
+      min-height: 36px;
+      padding: 0.3rem 0.7rem;
+      border-radius: var(--radius-sm);
+      background: var(--surface-inset);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      cursor: pointer;
+      transition: all 140ms var(--ease-fast);
+    }
+
+    .contract-tab:hover {
+      color: var(--text-primary);
+      border-color: var(--border-strong);
+    }
+
+    .contract-tab[aria-selected="true"] {
+      background: var(--accent-primary-soft);
+      border-color: var(--accent-primary-border);
+      color: var(--accent-primary);
+      font-weight: 600;
+    }
+
+    .contract-code {
+      background: var(--surface-inset);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.1rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.6;
+      color: #CBD5E1;
+      overflow-x: auto;
+      white-space: pre;
+      min-height: 168px;
+    }
+
+    /* ==========================================================================
+       Interactive Prompt & Guardrail Sandbox Section
+       ========================================================================== */
+    .sandbox-shell {
+      display: grid;
+      grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+      gap: 1.5rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-xl);
+      padding: clamp(1.25rem, 3vw, 2rem);
+      box-shadow: var(--shadow-elevated);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      margin-bottom: 1.15rem;
+    }
+
+    .form-label {
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .form-hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      min-height: 44px;
+      padding: 0.65rem 0.9rem;
+      background: var(--surface-inset);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      transition: border-color 150ms var(--ease-fast);
+    }
+
+    .form-textarea {
+      min-height: 96px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16);
+    }
+
+    .form-error {
+      font-size: 0.8rem;
+      color: #FDA4AF;
+      display: none;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .form-error.visible {
+      display: flex;
+    }
+
+    .sandbox-output {
+      display: flex;
+      flex-direction: column;
+      background: var(--surface-inset);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .sandbox-output-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding: 0.85rem 1.1rem;
+      background: var(--surface-card);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .sandbox-output-pre {
+      padding: 1.15rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.6;
+      color: #CBD5E1;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      flex: 1;
+      max-height: 390px;
+      overflow-y: auto;
+    }
+
+    /* ==========================================================================
+       Pricing Section
+       ========================================================================== */
+    .pricing-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      margin-bottom: 2.25rem;
+      flex-wrap: wrap;
+    }
+
+    .billing-toggle {
+      display: inline-flex;
+      padding: 0.3rem;
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      gap: 0.25rem;
+    }
+
+    .billing-btn {
+      min-height: 38px;
+      padding: 0 0.95rem;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: var(--font-body);
+      font-size: 0.86rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 140ms var(--ease-fast);
+    }
+
+    .billing-btn[aria-pressed="true"] {
+      background: var(--accent-primary);
+      color: #04130D;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1.25rem;
+      align-items: stretch;
+    }
+
+    .pricing-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.5rem;
+      min-width: 0;
+    }
+
+    .pricing-card.featured {
+      border-color: var(--accent-primary-border);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, var(--surface-card) 38%);
+      box-shadow: var(--shadow-elevated);
+    }
+
+    .price-amount {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1;
+      margin: 1rem 0 0.35rem;
+    }
+
+    .price-period {
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .plan-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .plan-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.55rem;
+    }
+
+    .plan-features svg {
+      color: var(--accent-primary);
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+
+    /* ==========================================================================
+       Footer
+       ========================================================================== */
+    .site-footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 3rem 0;
+      background: rgba(9, 12, 18, 0.7);
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      list-style: none;
+    }
+
+    .footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.88rem;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .footer-links a:hover {
+      color: var(--text-primary);
+    }
+
+    /* ==========================================================================
+       Modals (Command Palette & Early Access Waitlist) + Toast
+       ========================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: rgba(4, 7, 12, 0.76);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-panel {
+      width: 100%;
+      max-width: 520px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-elevated);
+      overflow: hidden;
+      animation: modalIn 180ms var(--ease-out);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.15rem 1.35rem;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--surface-card);
+    }
+
+    .modal-close {
+      width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .modal-close:hover {
+      background: var(--surface-hover);
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 1.35rem;
+    }
+
+    .cmd-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .cmd-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      min-height: 44px;
+      padding: 0.65rem 0.9rem;
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 140ms var(--ease-fast), background-color 140ms var(--ease-fast);
+    }
+
+    .cmd-item:hover {
+      background: var(--surface-hover);
+      border-color: var(--accent-primary-border);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 95;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.85rem 1.15rem;
+      background: var(--surface-card-alt);
+      border: 1px solid var(--accent-primary-border);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-size: 0.88rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-elevated);
+      transform: translateY(16px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 200ms var(--ease-out), opacity 180ms var(--ease-fast);
+    }
+
+    .toast.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* ==========================================================================
+       Staggered Page-Load Entrance Animations
+       ========================================================================== */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: scale(0.97) translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .reveal {
+      animation: fadeUp 460ms var(--ease-out) both;
+      animation-delay: calc(var(--stagger, 0) * 65ms);
+    }
+
+    /* ==========================================================================
+       Responsive Breakpoints (1024px, 768px, 375px)
+       ========================================================================== */
+    @media (max-width: 1024px) {
+      .hero-grid,
+      .sandbox-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .span-7, .span-5 {
+        grid-column: span 12;
+      }
+
+      .pricing-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links,
+      .header-actions .kbd-trigger {
+        display: none;
+      }
+
+      .mobile-menu-btn {
+        display: inline-flex;
+      }
+
+      .diff-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-metrics {
+        grid-template-columns: 1fr;
+        gap: 0.9rem;
+      }
+
+      .phase-selector {
+        grid-template-columns: 1fr;
+      }
+
+      .sim-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="noise-overlay" aria-hidden="true"></div>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <div class="page-shell">
+    <!-- ==================== STICKY HEADER ==================== -->
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="#top" class="brand-link" aria-label="ArchTier Home">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+            <rect x="2" y="2" width="24" height="24" rx="6" fill="#121825" stroke="rgba(16,185,129,0.45)" stroke-width="1.5"/>
+            <path d="M7 18.5H21" stroke="#10B981" stroke-width="2" stroke-linecap="round"/>
+            <path d="M9.5 14H18.5" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+            <path d="M12 9.5H16" stroke="#38BDF8" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span>ArchTier</span>
+          <span class="brand-badge">v2.4</span>
+        </a>
+
+        <nav aria-label="Primary Navigation">
+          <ul class="nav-links">
+            <li><a href="#simulator">Live Engine</a></li>
+            <li><a href="#comparison">Anti-Slop Diff</a></li>
+            <li><a href="#features">Guardrail Matrix</a></li>
+            <li><a href="#sandbox">Prompt Builder</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+          </ul>
+        </nav>
+
+        <div class="header-actions">
+          <button type="button" class="kbd-trigger" id="openCmdBtn" aria-label="Open command palette">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <span>Quick Jump</span>
+            <kbd>⌘K</kbd>
+          </button>
+          <a href="#sandbox" class="btn btn-primary">Try Spec Builder</a>
+          <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobileDrawer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="mobile-drawer" id="mobileDrawer">
+        <nav aria-label="Mobile Navigation">
+          <a href="#simulator" class="mobile-nav-link">Live Engine</a>
+          <a href="#comparison" class="mobile-nav-link">Anti-Slop Diff</a>
+          <a href="#features" class="mobile-nav-link">Guardrail Matrix</a>
+          <a href="#sandbox" class="mobile-nav-link">Prompt Builder</a>
+          <a href="#pricing" class="mobile-nav-link">Pricing</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <!-- ==================== HERO + LIVE SIMULATOR ==================== -->
+      <section class="hero" id="top">
+        <div class="container hero-grid">
+          <div class="hero-copy">
+            <div class="eyebrow reveal" style="--stagger: 0;">
+              <span class="pulse-dot" aria-hidden="true"></span>
+              <span>Phase-Aware Architecture Engine · Cursor, Claude &amp; Antigravity</span>
+            </div>
+
+            <h1 class="hero-title reveal" style="--stagger: 1;">
+              Architecture guardrails that <span class="accent-underline">scale with your stage.</span>
+            </h1>
+
+            <p class="hero-lead reveal" style="--stagger: 2;">
+              Stop forcing enterprise boilerplate onto a weekend MVP—and stop letting AI coding agents turn your codebase into spaghetti. ArchTier locks non-negotiable security rules while adapting structural strictness across <strong>MVP</strong>, <strong>Growth</strong>, and <strong>Scale</strong>.
+            </p>
+
+            <div class="hero-cta-row reveal" style="--stagger: 3;">
+              <a href="#sandbox" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                  <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+                <span>Generate Guardrail Spec</span>
+              </a>
+              <button type="button" class="btn btn-secondary" id="copyHeroPromptBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                </svg>
+                <span>Copy Agent System Prompt</span>
+              </button>
+            </div>
+
+            <div class="hero-metrics reveal" style="--stagger: 4;">
+              <div class="metric-item">
+                <div class="metric-value tabular">100%</div>
+                <div class="metric-label">Security &amp; Zod validation locked across all tiers</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-value tabular">-64%</div>
+                <div class="metric-label">Less premature abstraction during MVP sprints</div>
+              </div>
+              <div class="metric-item">
+                <div class="metric-value tabular">5-Part</div>
+                <div class="metric-label">Binding architecture contract per AI code gen</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Simulator Preview -->
+          <div class="simulator-card reveal" id="simulator" style="--stagger: 2;" aria-label="Interactive Phase Guardrail Simulator">
+            <div class="sim-topbar">
+              <div class="sim-window-meta">
+                <span class="sim-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span>POST /api/analyze · live-evaluator</span>
+              </div>
+              <span class="status-pill pill-mandatory" id="simActiveBadge">MVP MODE</span>
+            </div>
+
+            <div class="sim-body">
+              <div class="phase-selector" role="group" aria-label="Select project phase">
+                <button type="button" class="phase-btn" data-phase="mvp" aria-pressed="true">
+                  <span class="phase-btn-title">01 · MVP</span>
+                  <span class="phase-btn-sub">Ship fast, zero drift</span>
+                </button>
+                <button type="button" class="phase-btn" data-phase="growth" aria-pressed="false">
+                  <span class="phase-btn-title">02 · Growth</span>
+                  <span class="phase-btn-sub">Team boundaries</span>
+                </button>
+                <button type="button" class="phase-btn" data-phase="scale" aria-pressed="false">
+                  <span class="phase-btn-title">03 · Scale</span>
+                  <span class="phase-btn-sub">Strict contracts</span>
+                </button>
+              </div>
+
+              <div class="scenario-row" role="group" aria-label="Select feature scenario">
+                <span class="scenario-label">Task:</span>
+                <button type="button" class="scenario-chip" data-scenario="auth" aria-pressed="true">User Auth API</button>
+                <button type="button" class="scenario-chip" data-scenario="billing" aria-pressed="false">Stripe Webhook</button>
+                <button type="button" class="scenario-chip" data-scenario="audit" aria-pressed="false">Guardrail Engine</button>
+              </div>
+
+              <div class="sim-stats">
+                <div class="sim-stat-box">
+                  <div class="sim-stat-label">Mandatory</div>
+                  <div class="sim-stat-val tabular" id="statMandatory">3 rules</div>
+                </div>
+                <div class="sim-stat-box">
+                  <div class="sim-stat-label">Deferred</div>
+                  <div class="sim-stat-val tabular" id="statDeferred">2 skipped</div>
+                </div>
+                <div class="sim-stat-box">
+                  <div class="sim-stat-label">Boilerplate Saved</div>
+                  <div class="sim-stat-val tabular" id="statSaved" style="color: var(--accent-primary);">~62%</div>
+                </div>
+              </div>
+
+              <div class="rule-list" id="simRuleList" aria-live="polite">
+                <!-- Dynamically populated by JS -->
+              </div>
+
+              <div class="sim-filepath-bar">
+                <span>Declared Target:</span>
+                <code id="simFilepath">/src/app/api/auth/route.ts</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== ANTI-OVERENGINEERING DIFF ==================== -->
+      <section class="section" id="comparison">
+        <div class="container">
+          <div class="section-header">
+            <div class="section-kicker">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                <path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>
+              </svg>
+              <span>Why Contrarian Guardrails Win</span>
+            </div>
+            <h2>Rigid enterprise prompts stall early teams.</h2>
+            <p>
+              Standard architecture prompts demand repositories, DTO mappers, and event buses on day one. ArchTier separates <strong>fatal risks</strong> from <strong>premature ceremonies</strong>.
+            </p>
+          </div>
+
+          <div class="diff-grid">
+            <article class="diff-card">
+              <div class="diff-head">
+                <div>
+                  <h3>Generic "Senior Architect" Prompt</h3>
+                  <p style="font-size: 0.86rem; margin-top: 0.25rem;">Treats a 2-week MVP like a 400-engineer bank</p>
+                </div>
+                <span class="status-pill pill-danger">Over-Engineered</span>
+              </div>
+              <pre class="tree-block"><code>/src/modules/auth/
+├── domain/entities/user.entity.ts         <span class="tree-line-warn">// premature</span>
+├── domain/ports/user-repo.interface.ts    <span class="tree-line-warn">// 1 implementation</span>
+├── application/use-cases/login.usecase.ts <span class="tree-line-warn">// wrapper</span>
+├── application/dtos/login-request.dto.ts  <span class="tree-line-warn">// duplicated</span>
+├── infrastructure/mappers/user.mapper.ts  <span class="tree-line-warn">// boilerplate</span>
+├── infrastructure/adapters/prisma.repo.ts
+└── presentation/controllers/auth.ctrl.ts</code></pre>
+              <div class="diff-footer-meta tabular">
+                <span>14 files generated</span>
+                <span>~680 LOC boilerplate</span>
+                <span style="color: #FDA4AF;">High AI drift risk</span>
+              </div>
+            </article>
+
+            <article class="diff-card is-recommended">
+              <div class="diff-head">
+                <div>
+                  <h3>ArchTier · MVP Guardrail Contract</h3>
+                  <p style="font-size: 0.86rem; margin-top: 0.25rem;">Strict security &amp; types, zero ceremony until Growth</p>
+                </div>
+                <span class="status-pill pill-mandatory">Production-Safe</span>
+              </div>
+              <pre class="tree-block"><code>/src/
+├── lib/schemas/auth.schema.ts             <span class="tree-line-good">// Zod contract (locked)</span>
+├── lib/engine/authenticate.ts             <span class="tree-line-good">// pure typed logic</span>
+├── app/api/auth/route.ts                  <span class="tree-line-good">// validated boundary</span>
+└── tests/integration/auth.test.ts         <span class="tree-line-good">// required test spec</span>
+<span class="tree-line-dim">// Deferred to Growth: Repository DI, Multi-layer DTOs</span></code></pre>
+              <div class="diff-footer-meta tabular">
+                <span style="color: #6EE7B7;">4 focused files</span>
+                <span>~190 LOC clean TS</span>
+                <span style="color: #6EE7B7;">100% security floor</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== ASYMMETRIC BENTO GRID ==================== -->
+      <section class="section" id="features">
+        <div class="container">
+          <div class="section-header">
+            <div class="section-kicker">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                <rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>
+              </svg>
+              <span>Engine Architecture</span>
+            </div>
+            <h2>Built like a compiler for your AI coding agents.</h2>
+            <p>
+              Every rule is deterministic, auditable, and mapped to a binding 5-section output contract before a single line of code is written.
+            </p>
+          </div>
+
+          <div class="bento-grid">
+            <!-- Bento 1: Wide (7 cols) — Adaptive Matrix -->
+            <article class="bento-card span-7">
+              <div>
+                <div class="bento-icon-wrap" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 20V10M18 20V4M6 20v-4"/>
+                  </svg>
+                </div>
+                <h3>Phase-Calibrated Rule Matrix</h3>
+                <p>Promote architectural rigor deliberately when your team size and traffic justify it—never by accident.</p>
+              </div>
+
+              <div class="mini-matrix-wrap">
+                <table class="mini-matrix">
+                  <thead>
+                    <tr>
+                      <th>Guardrail Rule</th>
+                      <th>MVP</th>
+                      <th>Growth</th>
+                      <th>Scale</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="mono">Zod Input &amp; Env Secrets</td>
+                      <td><span class="status-pill pill-mandatory">Locked</span></td>
+                      <td><span class="status-pill pill-mandatory">Locked</span></td>
+                      <td><span class="status-pill pill-mandatory">Locked</span></td>
+                    </tr>
+                    <tr>
+                      <td class="mono">TypeScript Strict (No any)</td>
+                      <td><span class="status-pill pill-mandatory">Locked</span></td>
+                      <td><span class="status-pill pill-mandatory">Locked</span></td>
+                      <td><span class="status-pill pill-mandatory">Locked</span></td>
+                    </tr>
+                    <tr>
+                      <td class="mono">Repository Abstraction</td>
+                      <td><span class="status-pill pill-deferred">Deferred</span></td>
+                      <td><span class="status-pill pill-recommended">Advisory</span></td>
+                      <td><span class="status-pill pill-mandatory">Locked</span></td>
+                    </tr>
+                    <tr>
+                      <td class="mono">OpenAPI / Event Contracts</td>
+                      <td><span class="status-pill pill-deferred">Deferred</span></td>
+                      <td><span class="status-pill pill-deferred">Deferred</span></td>
+                      <td><span class="status-pill pill-mandatory">Locked</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <!-- Bento 2: Narrow (5 cols) — Security Floor -->
+            <article class="bento-card span-5">
+              <div>
+                <div class="bento-icon-wrap" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>
+                  </svg>
+                </div>
+                <h3>Non-Negotiable Security Floor</h3>
+                <p>Fast MVP mode never compromises security boundaries. Four checks stay permanently locked.</p>
+              </div>
+
+              <ul class="security-list">
+                <li>
+                  <span class="security-list-left">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                    <span>Schema validation on all API boundaries</span>
+                  </span>
+                  <span class="mono" style="font-size: 0.72rem; color: #34D399;">ALWAYS ON</span>
+                </li>
+                <li>
+                  <span class="security-list-left">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                    <span>Environment variables for all secrets</span>
+                  </span>
+                  <span class="mono" style="font-size: 0.72rem; color: #34D399;">ALWAYS ON</span>
+                </li>
+                <li>
+                  <span class="security-list-left">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                    <span>Safe error responses (no stack leaks)</span>
+                  </span>
+                  <span class="mono" style="font-size: 0.72rem; color: #34D399;">ALWAYS ON</span>
+                </li>
+                <li>
+                  <span class="security-list-left">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                    <span>Explicit auth &amp; RBAC gate checks</span>
+                  </span>
+                  <span class="mono" style="font-size: 0.72rem; color: #34D399;">ALWAYS ON</span>
+                </li>
+              </ul>
+            </article>
+
+            <!-- Bento 3: Narrow (5 cols) — Stop-on-Conflict -->
+            <article class="bento-card span-5">
+              <div>
+                <div class="bento-icon-wrap" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/>
+                  </svg>
+                </div>
+                <h3>Stop-on-Conflict Protocol</h3>
+                <p>When a feature contradicts your folder tree or type contracts, the agent halts instead of silently guessing.</p>
+              </div>
+
+              <div class="conflict-terminal">
+                <div class="conflict-tag">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                  <span>ARCHITECTURAL CONFLICT DETECTED</span>
+                </div>
+                <div style="color: var(--text-secondary);">
+                  Requested Prisma query inside <span style="color: var(--text-primary);">/src/components/</span>.<br/>
+                  Violates Frontend/Backend separation.<br/>
+                  <span style="color: var(--accent-primary);">→ Action halted. Clarify: expose via POST /api/analyze or Server Action?</span>
+                </div>
+              </div>
+            </article>
+
+            <!-- Bento 4: Wide (7 cols) — Interactive 5-Section Contract -->
+            <article class="bento-card span-7">
+              <div>
+                <div class="bento-icon-wrap" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+                  </svg>
+                </div>
+                <h3>Binding 5-Section Code Contract</h3>
+                <p>Inspect how ArchTier structures every AI generation output so code reviews take seconds instead of hours.</p>
+              </div>
+
+              <div>
+                <div class="contract-tabs" role="tablist" aria-label="5-Section Output Contract">
+                  <button type="button" class="contract-tab" role="tab" data-tab="analysis" aria-selected="true">01 Analysis</button>
+                  <button type="button" class="contract-tab" role="tab" data-tab="filepath" aria-selected="false">02 Filepath</button>
+                  <button type="button" class="contract-tab" role="tab" data-tab="code" aria-selected="false">03 Typed Code</button>
+                  <button type="button" class="contract-tab" role="tab" data-tab="tests" aria-selected="false">04 Tests</button>
+                  <button type="button" class="contract-tab" role="tab" data-tab="impact" aria-selected="false">05 Impact</button>
+                </div>
+                <pre class="contract-code" id="contractPreview" aria-live="polite"></pre>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== INTERACTIVE SPEC & PROMPT BUILDER ==================== -->
+      <section class="section" id="sandbox">
+        <div class="container">
+          <div class="section-header">
+            <div class="section-kicker">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+              </svg>
+              <span>Interactive Prompt Builder</span>
+            </div>
+            <h2>Configure your stack. Export a tailored agent prompt.</h2>
+            <p>
+              Test ArchTier right here: pick your project phase and stack, describe your next feature, and generate a ready-to-paste system prompt for Antigravity, Cursor, or Claude.
+            </p>
+          </div>
+
+          <div class="sandbox-shell">
+            <form id="builderForm" novalidate>
+              <div class="form-group">
+                <label class="form-label" for="builderPhase">Project Phase</label>
+                <select class="form-select" id="builderPhase" name="phase">
+                  <option value="mvp">MVP — Speed + Non-Negotiable Security</option>
+                  <option value="growth">Growth — Modular Boundaries + Integration Tests</option>
+                  <option value="scale">Scale — Strict Contracts + Multi-Layer Isolation</option>
+                </select>
+                <span class="form-hint">Determines which structural rules are locked vs. deferred.</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="builderStack">Architecture &amp; Tech Stack</label>
+                <select class="form-select" id="builderStack" name="stack">
+                  <option value="nextjs">Next.js (App Router) + TypeScript + Zod + Prisma</option>
+                  <option value="react-express">React + Vite + Express + PostgreSQL</option>
+                  <option value="laravel">Laravel 11 + Vue 3 + Inertia + MySQL</option>
+                  <option value="go-react">Go (Chi/Fiber) + React + TypeScript + Postgres</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="builderTask">Current Feature Task</label>
+                <textarea class="form-textarea" id="builderTask" name="task" required>Build POST /api/analyze endpoint that validates project phase with Zod and returns mandatory, recommended, and deferred architecture guardrails.</textarea>
+                <span class="form-error" id="taskError" role="alert">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                  <span>Please enter at least 12 characters describing the feature to build.</span>
+                </span>
+              </div>
+
+              <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                <button type="submit" class="btn btn-primary">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                    <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
+                  </svg>
+                  <span>Compile Guardrail Prompt</span>
+                </button>
+                <button type="button" class="btn btn-secondary" id="copyCompiledBtn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                  </svg>
+                  <span>Copy Prompt</span>
+                </button>
+              </div>
+            </form>
+
+            <div class="sandbox-output">
+              <div class="sandbox-output-head">
+                <span class="mono" style="font-size: 0.78rem; color: var(--text-secondary);">archtier-system-prompt.md</span>
+                <span class="status-pill pill-mandatory" id="compiledBadge">MVP · READY</span>
+              </div>
+              <pre class="sandbox-output-pre" id="compiledPromptOutput" aria-live="polite"></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== PRICING ==================== -->
+      <section class="section" id="pricing">
+        <div class="container">
+          <div class="section-header">
+            <div class="section-kicker">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+              <span>Transparent Pricing</span>
+            </div>
+            <h2>Start free on your MVP. Upgrade when your team scales.</h2>
+            <p>Zero per-token markup. Bring your own Cursor, Claude, or Antigravity agent.</p>
+          </div>
+
+          <div class="pricing-controls">
+            <div class="billing-toggle" role="group" aria-label="Billing interval">
+              <button type="button" class="billing-btn" data-billing="monthly" aria-pressed="true">Monthly</button>
+              <button type="button" class="billing-btn" data-billing="annual" aria-pressed="false">Annual (Save 20%)</button>
+            </div>
+            <span class="mono" style="font-size: 0.78rem; color: var(--text-muted);" id="billingNote">Billed monthly · Cancel anytime</span>
+          </div>
+
+          <div class="pricing-grid">
+            <article class="pricing-card">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <h3>Solo MVP</h3>
+                  <span class="status-pill pill-deferred">Indie</span>
+                </div>
+                <div class="price-amount tabular">$<span data-price-monthly="0" data-price-annual="0">0</span><span class="price-period">/mo</span></div>
+                <p style="font-size: 0.9rem;">For solo builders shipping fast with AI coding agents.</p>
+                <ul class="plan-features">
+                  <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Unlimited MVP &amp; Growth prompt compilations</span></li>
+                  <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Core security floor &amp; Zod boundary checks</span></li>
+                  <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Export for Cursor, Claude &amp; Antigravity</span></li>
+                </ul>
+              </div>
+              <button type="button" class="btn btn-secondary open-waitlist-btn" data-plan="Solo MVP">Start Free</button>
+            </article>
+
+            <article class="pricing-card featured">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <h3>Growth Team</h3>
+                  <span class="status-pill pill-mandatory">Most Popular</span>
+                </div>
+                <div class="price-amount tabular">$<span data-price-monthly="29" data-price-annual="23">29</span><span class="price-period">/mo</span></div>
+                <p style="font-size: 0.9rem;">For product teams keeping 3–15 engineers aligned without drift.</p>
+                <ul class="plan-features">
+                  <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Saved workspace rulebooks &amp; PostgreSQL history</span></li>
+                  <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Custom phase promotion checklists (MVP → Scale)</span></li>
+                  <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>PR diff architectural drift auditing via API</span></li>
+                </ul>
+              </div>
+              <button type="button" class="btn btn-primary open-waitlist-btn" data-plan="Growth Team">Claim Early Access</button>
+            </article>
+
+            <article class="pricing-card">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <h3>Scale Org</h3>
+                  <span class="status-pill pill-recommended">Enterprise</span>
+                </div>
+                <div class="price-amount tabular">$<span data-price-monthly="99" data-price-annual="79">99</span><span class="price-period">/mo</span></div>
+                <p style="font-size: 0.9rem;">For multi-repo organizations enforcing strict domain contracts.</p>
+                <ul class="plan-features">
+                  <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Multi-service contract graph &amp; breaking-change gates</span></li>
+                  <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Custom SOC2 &amp; compliance security rulesets</span></li>
+                  <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>SSO, CI/CD webhook enforcement &amp; audit logs</span></li>
+                </ul>
+              </div>
+              <button type="button" class="btn btn-secondary open-waitlist-btn" data-plan="Scale Org">Request Org Demo</button>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div>
+          <a href="#top" class="brand-link" style="font-size: 1.05rem;">
+            <svg width="22" height="22" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+              <rect x="2" y="2" width="24" height="24" rx="6" fill="#121825" stroke="rgba(16,185,129,0.45)" stroke-width="1.5"/>
+              <path d="M7 18.5H21" stroke="#10B981" stroke-width="2" stroke-linecap="round"/>
+              <path d="M9.5 14H18.5" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+              <path d="M12 9.5H16" stroke="#38BDF8" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>ArchTier</span>
+          </a>
+          <p style="font-size: 0.84rem; color: var(--text-muted); margin-top: 0.35rem;">
+            Adaptive architecture guardrails for pragmatic engineering teams. Press <kbd>⌘K</kbd> anywhere.
+          </p>
+        </div>
+
+        <ul class="footer-links">
+          <li><a href="#simulator">Live Engine</a></li>
+          <li><a href="#comparison">Anti-Slop Diff</a></li>
+          <li><a href="#features">Guardrail Matrix</a></li>
+          <li><a href="#sandbox">Prompt Builder</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+        </ul>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ==================== COMMAND PALETTE MODAL ==================== -->
+  <div class="modal-backdrop" id="cmdModal" role="dialog" aria-modal="true" aria-labelledby="cmdModalTitle">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h3 id="cmdModalTitle" style="font-size: 1rem;">Quick Actions &amp; Phase Switcher</h3>
+        <button type="button" class="modal-close" data-close-modal="cmdModal" aria-label="Close command palette">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <ul class="cmd-list">
+          <li><button type="button" class="cmd-item" data-cmd="phase:mvp"><span>Switch Simulator to MVP Mode</span><kbd>01</kbd></button></li>
+          <li><button type="button" class="cmd-item" data-cmd="phase:growth"><span>Switch Simulator to Growth Mode</span><kbd>02</kbd></button></li>
+          <li><button type="button" class="cmd-item" data-cmd="phase:scale"><span>Switch Simulator to Scale Mode</span><kbd>03</kbd></button></li>
+          <li><button type="button" class="cmd-item" data-cmd="jump:#sandbox"><span>Jump to Interactive Prompt Builder</span><kbd>↵</kbd></button></li>
+          <li><button type="button" class="cmd-item" data-cmd="copy"><span>Copy Full ArchTier System Prompt</span><kbd>C</kbd></button></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== EARLY ACCESS MODAL ==================== -->
+  <div class="modal-backdrop" id="waitlistModal" role="dialog" aria-modal="true" aria-labelledby="waitlistTitle">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h3 id="waitlistTitle" style="font-size: 1.05rem;">Join ArchTier Early Access</h3>
+        <button type="button" class="modal-close" data-close-modal="waitlistModal" aria-label="Close early access modal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.9rem; margin-bottom: 1.15rem;">Selected plan: <strong id="selectedPlanLabel" style="color: var(--accent-primary);">Growth Team</strong>. Enter your work email to reserve workspace access.</p>
+        <form id="waitlistForm" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="waitlistEmail">Work or Developer Email</label>
+            <input type="email" class="form-input" id="waitlistEmail" name="email" autocomplete="email" placeholder="you@company.dev" required />
+            <span class="form-error" id="emailError" role="alert">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+              <span>Please enter a valid email address.</span>
+            </span>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.65rem;">
+            <button type="button" class="btn btn-ghost" data-close-modal="waitlistModal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Reserve Access</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST NOTIFICATION ==================== -->
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.4" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+    <span id="toastText">Copied to clipboard</span>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ---------------- State & Data Models ---------------- */
+      const SIMULATOR_DATA = {
+        mvp: {
+          badge: 'MVP MODE',
+          saved: '~62%',
+          mandatoryCount: '3 rules',
+          deferredCount: '2 skipped',
+          rules: [
+            { name: 'Zod Payload & Env Secret Validation', reason: 'Non-negotiable security floor across every API route.', status: 'mandatory' },
+            { name: 'Strict TypeScript Contracts (No any)', reason: 'Prevents silent runtime bugs without adding boilerplate.', status: 'mandatory' },
+            { name: 'Colocated Pure Domain Function', reason: 'Keep logic testable in /src/lib/engine without DI wrappers.', status: 'mandatory' },
+            { name: 'Repository & Adapter Interfaces', reason: 'Deferred: direct Prisma access is faster while schema evolves.', status: 'deferred' },
+            { name: 'Multi-Layer DTO Mappers & Event Bus', reason: 'Deferred: premature abstraction for single-app MVP.', status: 'deferred' }
+          ]
+        },
+        growth: {
+          badge: 'GROWTH MODE',
+          saved: '~34%',
+          mandatoryCount: '4 rules',
+          deferredCount: '1 skipped',
+          rules: [
+            { name: 'Zod Payload & Env Secret Validation', reason: 'Locked security boundary on all incoming HTTP requests.', status: 'mandatory' },
+            { name: 'Strict TypeScript + Shared Schema Layer', reason: 'Frontend and backend import identical types from /src/lib/schemas.', status: 'mandatory' },
+            { name: 'Integration Test Suite Coverage', reason: 'Required for all critical mutations to protect 3+ engineers.', status: 'mandatory' },
+            { name: 'Repository Abstraction Layer', reason: 'Recommended for high-churn models to isolate query logic.', status: 'recommended' },
+            { name: 'Distributed Event Bus / Microservice Split', reason: 'Deferred: modular monolith remains faster until scale bottleneck.', status: 'deferred' }
+          ]
+        },
+        scale: {
+          badge: 'SCALE MODE',
+          saved: '0% (Full Rigor)',
+          mandatoryCount: '5 rules',
+          deferredCount: '0 skipped',
+          rules: [
+            { name: 'Zod Validation + RBAC + Rate Limiting', reason: 'Zero-trust API gateway checks enforced on every handler.', status: 'mandatory' },
+            { name: 'Versioned Shared Contracts & OpenAPI Spec', reason: 'Prevents breaking downstream consumers across repos.', status: 'mandatory' },
+            { name: 'Strict Repository & Domain Isolation', reason: 'Decouples persistence engine from business rules.', status: 'mandatory' },
+            { name: 'Unit + Integration + Contract Test Gates', reason: 'Blocks merge if any consumer contract breaks.', status: 'mandatory' },
+            { name: 'Breaking-Change & Tech-Debt Impact Report', reason: 'Mandatory architectural sign-off before deployment.', status: 'mandatory' }
+          ]
+        }
+      };
+
+      const SCENARIO_PATHS = {
+        auth: {
+          mvp: '/src/app/api/auth/route.ts',
+          growth: '/src/lib/engine/auth-service.ts',
+          scale: '/src/domains/identity/handlers/auth.route.ts'
+        },
+        billing: {
+          mvp: '/src/app/api/webhooks/stripe/route.ts',
+          growth: '/src/lib/engine/billing-webhook.ts',
+          scale: '/src/domains/billing/consumers/stripe.handler.ts'
+        },
+        audit: {
+          mvp: '/src/lib/engine/evaluate-guardrails.ts',
+          growth: '/src/lib/engine/evaluate-guardrails.ts',
+          scale: '/src/domains/guardrails/core/evaluator.ts'
+        }
+      };
+
+      const CONTRACT_SNIPPETS = {
+        analysis: `## 1. Architecture Analysis
+- Layer: Pure Domain Engine (/src/lib/engine) + Shared Schemas (/src/lib/schemas)
+- Phase Alignment: MVP mode active -> direct pure function, zero DI containers
+- Separation of Concerns: Next.js route handler delegates evaluation to pure module
+- Conflict Check: None detected. Proceed to filepath declaration.`,
+        filepath: `## 2. Filepath Declaration
+- File: /src/lib/engine/evaluate-guardrails.ts
+- Purpose: Deterministic phase-aware rule evaluator (mvp | growth | scale)
+- Dependencies: /src/lib/schemas/guardrail.schema.ts (Zod types only)
+- Consumers: /src/app/api/analyze/route.ts, /tests/unit/evaluate-guardrails.test.ts`,
+        code: `export function evaluateGuardrails(input: AnalysisRequest): GuardrailReport {
+  const mandatory = SECURITY_FLOOR_RULES; // Always locked across all phases
+  const structural = STRUCTURAL_RULES.map((rule) => ({
+    ...rule,
+    status: resolveTierStatus(rule.minPhase, input.phase),
+  }));
+  return { phase: input.phase, mandatory, structural };
+}`,
+        tests: `## 4. Testing Requirements
+- Unit: /tests/unit/evaluate-guardrails.test.ts
+  • Asserts security rules stay 'mandatory' even when phase === 'mvp'
+  • Asserts repository abstraction shifts 'deferred' -> 'mandatory' in 'scale'
+- Integration: /tests/integration/api-analyze.test.ts
+  • Returns HTTP 400 with structured Zod issues on invalid phase payload`,
+        impact: `## 5. Architectural Impact & Security Checklist
+- Breaking Changes: None (additive domain module)
+- Intentional MVP Trade-Off: In-memory rule registry (DB persistence deferred)
+- [x] Zod input validation at API boundary
+- [x] Secrets isolated to process.env (zero hardcoded keys)
+- [x] Strict TypeScript mode enabled (zero 'any' types)`
+      };
+
+      const STACK_LABELS = {
+        'nextjs': 'Next.js (App Router), React, TypeScript (strict), Tailwind CSS, Zod, Prisma + PostgreSQL',
+        'react-express': 'React + Vite (TypeScript strict), Express API, Zod validation, PostgreSQL',
+        'laravel': 'Laravel 11, Vue 3 + Inertia, FormRequest validation, MySQL',
+        'go-react': 'Go (Chi router + strict structs), React + TypeScript, PostgreSQL'
+      };
+
+      let activePhase = 'mvp';
+      let activeScenario = 'auth';
+      let toastTimer = null;
+
+      /* ---------------- Toast & Clipboard Helper ---------------- */
+      const toastEl = document.getElementById('toast');
+      const toastText = document.getElementById('toastText');
+
+      function showToast(message) {
+        toastText.textContent = message;
+        toastEl.classList.add('visible');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          toastEl.classList.remove('visible');
+        }, 2600);
+      }
+
+      function copyText(text, successMsg) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () {
+            showToast(successMsg);
+          }).catch(function () {
+            fallbackCopy(text, successMsg);
+          });
+        } else {
+          fallbackCopy(text, successMsg);
+        }
+      }
+
+      function fallbackCopy(text, successMsg) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          showToast(successMsg);
+        } catch (err) {
+          showToast('Select and copy manually.');
+        }
+        document.body.removeChild(ta);
+      }
+
+      /* ---------------- Hero Simulator Rendering ---------------- */
+      const simRuleList = document.getElementById('simRuleList');
+      const simActiveBadge = document.getElementById('simActiveBadge');
+      const statMandatory = document.getElementById('statMandatory');
+      const statDeferred = document.getElementById('statDeferred');
+      const statSaved = document.getElementById('statSaved');
+      const simFilepath = document.getElementById('simFilepath');
+
+      function renderSimulator() {
+        const data = SIMULATOR_DATA[activePhase];
+        simActiveBadge.textContent = data.badge;
+        statMandatory.textContent = data.mandatoryCount;
+        statDeferred.textContent = data.deferredCount;
+        statSaved.textContent = data.saved;
+        simFilepath.textContent = SCENARIO_PATHS[activeScenario][activePhase];
+
+        simRuleList.innerHTML = data.rules.map(function (rule) {
+          const pillClass =
+            rule.status === 'mandatory' ? 'pill-mandatory' :
+            rule.status === 'recommended' ? 'pill-recommended' : 'pill-deferred';
+          return (
+            '<div class="rule-row">' +
+              '<div class="rule-info">' +
+                '<div class="rule-name">' + rule.name + '</div>' +
+                '<div class="rule-reason">' + rule.reason + '</div>' +
+              '</div>' +
+              '<span class="status-pill ' + pillClass + '">' + rule.status + '</span>' +
+            '</div>'
+          );
+        }).join('');
+
+        document.querySelectorAll('.phase-btn').forEach(function (btn) {
+          btn.setAttribute('aria-pressed', String(btn.dataset.phase === activePhase));
+        });
+
+        document.querySelectorAll('.scenario-chip').forEach(function (chip) {
+          chip.setAttribute('aria-pressed', String(chip.dataset.scenario === activeScenario));
+        });
+      }
+
+      document.querySelectorAll('.phase-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          activePhase = btn.dataset.phase;
+          renderSimulator();
+        });
+      });
+
+      document.querySelectorAll('.scenario-chip').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          activeScenario = chip.dataset.scenario;
+          renderSimulator();
+        });
+      });
+
+      /* ---------------- 5-Section Contract Tabs ---------------- */
+      const contractPreview = document.getElementById('contractPreview');
+
+      function setContractTab(tabKey) {
+        contractPreview.textContent = CONTRACT_SNIPPETS[tabKey] || CONTRACT_SNIPPETS.analysis;
+        document.querySelectorAll('.contract-tab').forEach(function (tab) {
+          tab.setAttribute('aria-selected', String(tab.dataset.tab === tabKey));
+        });
+      }
+
+      document.querySelectorAll('.contract-tab').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          setContractTab(tab.dataset.tab);
+        });
+      });
+
+      /* ---------------- Prompt Builder Sandbox ---------------- */
+      const builderForm = document.getElementById('builderForm');
+      const builderPhase = document.getElementById('builderPhase');
+      const builderStack = document.getElementById('builderStack');
+      const builderTask = document.getElementById('builderTask');
+      const taskError = document.getElementById('taskError');
+      const compiledPromptOutput = document.getElementById('compiledPromptOutput');
+      const compiledBadge = document.getElementById('compiledBadge');
+
+      function compilePromptText() {
+        const phase = builderPhase.value;
+        const stack = STACK_LABELS[builderStack.value];
+        const task = builderTask.value.trim();
+        const phaseRules = SIMULATOR_DATA[phase].rules
+          .map(function (r) { return '- [' + r.status.toUpperCase() + '] ' + r.name + ': ' + r.reason; })
+          .join('\n');
+
+        return [
+          'ArchTier — Adaptive Full-Stack Software Architect (' + phase.toUpperCase() + ' Phase)',
+          '',
+          '## Role',
+          'You are a senior software architect enforcing phase-calibrated guardrails.',
+          'Never relax security boundaries; defer premature abstractions not required by ' + phase.toUpperCase() + '.',
+          '',
+          '## Context',
+          '- Stack: ' + stack,
+          '- Active Phase: ' + phase.toUpperCase(),
+          '- Current Work: ' + task,
+          '',
+          '## Active Guardrails',
+          phaseRules,
+          '',
+          '## Required Output Contract',
+          '1. Architecture Analysis  2. Filepath Declaration  3. Code Implementation',
+          '4. Testing Requirements   5. Architectural Impact & Security Checklist',
+          'Stop immediately and ask for clarification if any conflict arises.'
+        ].join('\n');
+      }
+
+      function updateCompiledPrompt(showFeedback) {
+        const val = builderTask.value.trim();
+        if (val.length < 12) {
+          taskError.classList.add('visible');
+          builderTask.focus();
+          return false;
+        }
+        taskError.classList.remove('visible');
+        compiledPromptOutput.textContent = compilePromptText();
+        compiledBadge.textContent = builderPhase.value.toUpperCase() + ' · READY';
+        if (showFeedback) {
+          showToast('Compiled ' + builderPhase.value.toUpperCase() + ' guardrail prompt');
+        }
+        return true;
+      }
+
+      builderForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        updateCompiledPrompt(true);
+      });
+
+      builderPhase.addEventListener('change', function () { updateCompiledPrompt(false); });
+      builderStack.addEventListener('change', function () { updateCompiledPrompt(false); });
+      builderTask.addEventListener('blur', function () {
+        if (builderTask.value.trim().length >= 12) {
+          taskError.classList.remove('visible');
+        }
+      });
+
+      document.getElementById('copyCompiledBtn').addEventListener('click', function () {
+        if (updateCompiledPrompt(false)) {
+          copyText(compiledPromptOutput.textContent, 'Tailored ArchTier prompt copied');
+        }
+      });
+
+      document.getElementById('copyHeroPromptBtn').addEventListener('click', function () {
+        copyText(compiledPromptOutput.textContent, 'ArchTier system prompt copied');
+      });
+
+      /* ---------------- Pricing Billing Toggle ---------------- */
+      const billingNote = document.getElementById('billingNote');
+      document.querySelectorAll('.billing-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const mode = btn.dataset.billing;
+          document.querySelectorAll('.billing-btn').forEach(function (b) {
+            b.setAttribute('aria-pressed', String(b === btn));
+          });
+          document.querySelectorAll('[data-price-monthly]').forEach(function (el) {
+            el.textContent = mode === 'annual' ? el.dataset.priceAnnual : el.dataset.priceMonthly;
+          });
+          billingNote.textContent = mode === 'annual'
+            ? 'Billed annually · 20% discount applied'
+            : 'Billed monthly · Cancel anytime';
+        });
+      });
+
+      /* ---------------- Mobile Drawer ---------------- */
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+      const mobileDrawer = document.getElementById('mobileDrawer');
+
+      mobileMenuBtn.addEventListener('click', function () {
+        const isOpen = mobileDrawer.classList.toggle('open');
+        mobileMenuBtn.setAttribute('aria-expanded', String(isOpen));
+      });
+
+      document.querySelectorAll('.mobile-nav-link').forEach(function (link) {
+        link.addEventListener('click', function () {
+          mobileDrawer.classList.remove('open');
+          mobileMenuBtn.setAttribute('aria-expanded', 'false');
+        });
+      });
+
+      /* ---------------- Modals (Command Palette & Waitlist) ---------------- */
+      function openModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) modal.classList.add('open');
+      }
+
+      function closeModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) modal.classList.remove('open');
+      }
+
+      document.getElementById('openCmdBtn').addEventListener('click', function () {
+        openModal('cmdModal');
+      });
+
+      document.querySelectorAll('[data-close-modal]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          closeModal(btn.dataset.closeModal);
+        });
+      });
+
+      document.querySelectorAll('.modal-backdrop').forEach(function (backdrop) {
+        backdrop.addEventListener('click', function (e) {
+          if (e.target === backdrop) {
+            backdrop.classList.remove('open');
+          }
+        });
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          const cmd = document.getElementById('cmdModal');
+          if (cmd.classList.contains('open')) {
+            closeModal('cmdModal');
+          } else {
+            openModal('cmdModal');
+          }
+        } else if (e.key === 'Escape') {
+          closeModal('cmdModal');
+          closeModal('waitlistModal');
+        }
+      });
+
+      document.querySelectorAll('.cmd-item').forEach(function (item) {
+        item.addEventListener('click', function () {
+          const action = item.dataset.cmd;
+          closeModal('cmdModal');
+          if (action.startsWith('phase:')) {
+            activePhase = action.split(':')[1];
+            renderSimulator();
+            const sim = document.getElementById('simulator');
+            if (sim) sim.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            showToast('Simulator switched to ' + activePhase.toUpperCase());
+          } else if (action.startsWith('jump:')) {
+            const target = document.querySelector(action.split(':')[1]);
+            if (target) target.scrollIntoView({ behavior: 'smooth' });
+          } else if (action === 'copy') {
+            copyText(compiledPromptOutput.textContent, 'ArchTier system prompt copied');
+          }
+        });
+      });
+
+      /* Waitlist Modal */
+      const selectedPlanLabel = document.getElementById('selectedPlanLabel');
+      const waitlistForm = document.getElementById('waitlistForm');
+      const waitlistEmail = document.getElementById('waitlistEmail');
+      const emailError = document.getElementById('emailError');
+
+      document.querySelectorAll('.open-waitlist-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          selectedPlanLabel.textContent = btn.dataset.plan;
+          emailError.classList.remove('visible');
+          waitlistEmail.value = '';
+          openModal('waitlistModal');
+          setTimeout(function () { waitlistEmail.focus(); }, 60);
+        });
+      });
+
+      waitlistForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const email = waitlistEmail.value.trim();
+        const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        if (!valid) {
+          emailError.classList.add('visible');
+          waitlistEmail.focus();
+          return;
+        }
+        emailError.classList.remove('visible');
+        closeModal('waitlistModal');
+        showToast('Access reserved for ' + email + ' (' + selectedPlanLabel.textContent + ')');
+      });
+
+      /* ---------------- Initial Render ---------------- */
+      renderSimulator();
+      setContractTab('analysis');
+      updateCompiledPrompt(false);
+    })();
+  </script>
+</body>
+</html>
