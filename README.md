@@ -7,16 +7,17 @@
 *A phase-calibrated compiler of software architecture guardrails for AI coding agents.*  
 *Prevents premature over-engineering without sacrificing security or type-safety.*
 
-[![Next.js 15](https://img.shields.io/badge/Next.js-15.5-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![Next.js 15](https://img.shields.io/badge/Next.js-15.2-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React-19.0-blue?style=flat-square&logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict_0_Errors-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS_v3.4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
-[![Better Auth](https://img.shields.io/badge/Auth-Better_Auth-purple?style=flat-square)](https://www.better-auth.com/)
+[![Better Auth](https://img.shields.io/badge/Auth-Better_Auth_v1.7-purple?style=flat-square)](https://www.better-auth.com/)
 [![Prisma ORM](https://img.shields.io/badge/ORM-Prisma_v6-2D3748?style=flat-square&logo=prisma)](https://www.prisma.io/)
-[![Vitest](https://img.shields.io/badge/Tests-Vitest_21_Passed-6E9F18?style=flat-square&logo=vitest)](https://vitest.dev/)
+[![Vitest](https://img.shields.io/badge/Tests-30_Passed_100%25-6E9F18?style=flat-square&logo=vitest)](https://vitest.dev/)
+[![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=flat-square&logo=githubactions)](https://github.com/MasRizqi07/ArchTier-Project/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald?style=flat-square)](LICENSE)
 
-[Live Engine](#-core-features) • [Adaptive Matrix](#-adaptive-guardrail-matrix) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started) • [Architecture Guidelines](#-strict-layer-boundaries)
+[Live Features](#-core-features) • [Adaptive Matrix](#-adaptive-guardrail-matrix) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started) • [Deployment Guide](DEPLOYMENT.md) • [Architecture Guidelines](#-strict-layer-boundaries)
 
 ---
 
@@ -32,7 +33,7 @@ Modern software engineering with AI coding agents (**Antigravity**, **Cursor**, 
 ### The ArchTier Solution
 **ArchTier** separates the **Non-Negotiable Security Floor** (rules that are *always locked* across all phases) from **premature structural ceremonies** through a 3-tier lifecycle engine:
 
-```
+```text
 [ Phase 01: MVP ]        ──► [ Phase 02: Growth ]      ──► [ Phase 03: Scale ]
 Speed & Safety               Team Consistency              System Isolation
 Security Floor: LOCKED       Security Floor: LOCKED        Security Floor: LOCKED
@@ -63,7 +64,7 @@ Abstractions: DEFERRED       Abstractions: RECOMMENDED     Abstractions: MANDATO
 ## ⚡ Core Features
 
 - ⚙️ **Pure Deterministic Rule Engine (`POST /api/analyze`):**  
-  Framework-agnostic, zero-LLM-latency (<100ms p95), and zero token cost. Evaluates phase, stack, task category, and feature description into a complete `GuardrailReport`.
+  Framework-agnostic, zero-LLM-latency (<50ms p95), and zero token cost. Evaluates phase, stack, task category, and feature description into a complete `GuardrailReport`.
 - 🛑 **Deterministic Stop-on-Conflict Protocol:**  
   Scans for architectural violations before code is written:
   - **DB-in-UI Violation:** Flags Prisma/SQL operations placed inside client components.
@@ -83,6 +84,10 @@ Abstractions: DEFERRED       Abstractions: RECOMMENDED     Abstractions: MANDATO
   - Strict WCAG 2.1 AA accessibility (touch target $\ge 44\times 44\text{px}$, visible `<label>`, emerald `:focus-visible` ring).
 - 🔐 **Full-Stack Authentication (Better Auth + Prisma):**  
   Email/Password with live Password Strength Meter, GitHub & Google OAuth, HttpOnly secure cookies, and Demo Account quick-fill.
+- 💾 **Saved Ruleset Presets (CRUD):**  
+  Create, read, update, and delete custom ruleset configurations in Neon PostgreSQL with a 20-preset quota guard and offline development fallback.
+- ⌨️ **Command Palette (`⌘K` / `Ctrl+K`):**  
+  Fast keyboard navigation, quick phase switching, and instant export shortcuts across all pages.
 
 ---
 
@@ -95,103 +100,28 @@ Abstractions: DEFERRED       Abstractions: RECOMMENDED     Abstractions: MANDATO
 - **Icons:** Inline SVGs & Lucide Icons
 - **Validation:** Zod v3.24
 - **ORM & Database:** Prisma v6 + PostgreSQL (Neon Serverless compatible)
-- **Authentication:** Better Auth v1.4
+- **Authentication:** Better Auth v1.7
 - **Testing:** Vitest v3
-- **Deployment:** Vercel
+- **Deployment:** Vercel + Neon
 
 ---
 
-## 📁 Project Structure
+## 🚀 Milestone Progress & Roadmap
 
-```text
-ArchTier-Project/
-├── .env.example                     # Environment variables blueprint
-├── .gitignore                       # Production gitignore (secrets & build caches ignored)
-├── package.json                     # Dependencies and build scripts
-├── tsconfig.json                    # Strict TypeScript configuration
-├── tailwind.config.ts               # Architectural Dark v2.4 theme tokens
-├── vitest.config.ts                 # Vitest test suite configuration
-├── prisma/
-│   └── schema.prisma                # PostgreSQL models: User, Session, Account, RulesetPreset
-├── docs/
-│   ├── prd.md                       # Product Requirements & v1.0 / v1.5 scope
-│   ├── architecture.md              # System Architecture & Layer Boundaries
-│   ├── design_system.md             # CSS variables, typography & A11y rules
-│   ├── ux_design.md                 # User flows & Dashboard wireframes
-│   ├── project_context.md           # Executive brief & session handoff
-│   └── agent_rules.md               # Binding AI coding agent operating rules
-├── templates/
-│   ├── landing.html                 # Approved Landing Page HTML Mockup
-│   └── login.html                   # Approved Login Split-Screen HTML Mockup
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx               # Root layout with Google Fonts & noise overlay
-│   │   ├── globals.css              # Design system variables & base styling
-│   │   ├── page.tsx                 # Interactive Landing Page with Live Engine
-│   │   ├── login/
-│   │   │   └── page.tsx             # Auth Page (Sign In / Register / OAuth)
-│   │   └── api/
-│   │       ├── analyze/route.ts     # POST /api/analyze (Zod-validated & rate-limited)
-│   │       └── auth/[...all]/route.ts # Better Auth route handler
-│   ├── components/
-│   │   ├── shared/                  # BrandLogo, StatusPill
-│   │   ├── landing/                 # LandingSimulator (Interactive Island)
-│   │   └── auth/                    # AuthForm, WorkspacePreview
-│   └── lib/
-│       ├── schemas/
-│       │   ├── guardrail.schema.ts  # Shared Zod contracts for engine
-│       │   └── auth.schema.ts       # Auth & password validation schemas
-│       ├── engine/
-│       │   ├── rule-registry.ts     # Security floor & phase-calibrated rule catalog
-│       │   ├── conflict-detector.ts # Boundary & anti-overengineering conflict scanner
-│       │   ├── evaluate-guardrails.ts # Main pure evaluator function
-│       │   └── export-compiler.ts   # Compiles reports to .mdc / CLAUDE.md / AGENTS.md
-│       ├── security/
-│       │   ├── error-response.ts    # Sanitized client error formatter
-│       │   └── rate-limit.ts        # Sliding-window rate limiter
-│       ├── db/
-│       │   └── prisma.ts            # PrismaClient singleton for serverless
-│       └── auth/
-│           ├── auth.ts              # Better Auth server instance
-│           └── auth-client.ts       # Better Auth React client
-└── tests/
-    ├── unit/
-    │   ├── evaluate-guardrails.test.ts # Rule evaluation & metric assertions
-    │   ├── conflict-detector.test.ts   # Layer violation & conflict assertions
-    │   ├── export-compiler.test.ts     # Multi-agent export format assertions
-    │   └── auth-schema.test.ts         # Zod auth validation & strength evaluator tests
-    └── integration/
-        └── api-analyze.test.ts         # Route handler integration tests
-```
+| Milestone | Scope & Deliverables | Status |
+| :--- | :--- | :--- |
+| **Milestone 1** | Foundation, Tokens, Engine, Conflict Detector, `POST /api/analyze`, 15 Tests | ✅ **Completed** |
+| **Milestone 2** | Neon Schema, Better Auth, Prisma Client, Auth Validation, `/login` Split UI | ✅ **Completed** |
+| **Milestone 3** | Landing Page Migration, Bento Grid, Prompt Sandbox, Pricing, `⌘K` Palette | ✅ **Completed** |
+| **Milestone 4** | Workspace Dashboard `/dashboard`, Presets CRUD, Exporters (`.mdc`, `CLAUDE.md`) | ✅ **Completed** |
+| **Milestone 5** | Production Hardening, Security Headers, Middleware, CI/CD, Vercel Ready | ✅ **Completed** |
 
 ---
 
-## 📐 Strict Layer Boundaries
+## 💻 Getting Started
 
-ArchTier enforces its architectural constraints through strict dependency directions:
+### 1. Clone & Install Dependencies
 
-```text
-[ /src/lib/schemas ]  ──► Only imports Zod. Zero framework or ORM imports.
-         ▲
-         │
-[ /src/lib/engine ]   ──► Pure TypeScript. Only imports from /src/lib/schemas.
-         ▲
-         │
-[ /src/app/api/** ]   ──► Thin controllers: validates Zod -> calls Engine/Prisma -> returns JSON.
-         ▲
-         │
-[ /src/components ]   ──► Presentation only. NEVER imports PrismaClient or server-only auth.
-```
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- **Node.js:** `>= 18.18.0` (Recommended: v20 or v22)
-- **Package Manager:** `npm`, `pnpm`, or `yarn`
-
-### 1. Clone & Install
 ```bash
 git clone https://github.com/MasRizqi07/ArchTier-Project.git
 cd ArchTier-Project
@@ -199,75 +129,104 @@ npm install
 ```
 
 ### 2. Configure Environment Variables
-Copy `.env.example` to `.env`:
+
+Create `.env.local` by copying the example:
+
 ```bash
-cp .env.example .env
+cp .env.example .env.local
 ```
-Update with your PostgreSQL connection string and a secret key:
-```ini
-DATABASE_URL="postgresql://user:password@localhost:5432/archtier?schema=public"
-BETTER_AUTH_SECRET="your-32-character-minimum-random-secret-key"
+
+Fill in your database URL and Better Auth secret (see [DEPLOYMENT.md](DEPLOYMENT.md) for full instructions):
+
+```bash
+DATABASE_URL="postgresql://user:password@ep-pooler.neon.tech/archtier?sslmode=require"
+DIRECT_URL="postgresql://user:password@ep-direct.neon.tech/archtier?sslmode=require"
+BETTER_AUTH_SECRET="archtier-dev-secret-32-chars-long-minimum"
 BETTER_AUTH_URL="http://localhost:3000"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
-### 3. Generate Database Client
+### 3. Initialize Prisma Client & Database
+
 ```bash
 npx prisma generate
+npx prisma db push
 ```
 
 ### 4. Run Development Server
+
 ```bash
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) to explore the Landing Page and live Phase Simulator.
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
 ## 🧪 Testing & Verification
 
-ArchTier comes with an automated Vitest test suite covering core engine evaluation, conflict detection, multi-agent export compilation, and API route validation:
+Run the full Vitest suite (30 automated tests across 7 test suites):
 
 ```bash
-# Run all unit and integration tests (21 tests)
+# Run tests once
 npm test
 
-# Run TypeScript strict typecheck (zero any, zero errors)
+# Run tests in watch mode
+npm run test:watch
+
+# TypeScript strict type checking (zero errors)
 npm run typecheck
 
-# Run Next.js production build simulation
+# ESLint code quality verification
+npm run lint
+
+# Production build verification
 npm run build
 ```
 
 ---
 
-## 📜 Mandatory 5-Section Output Contract
+## 📐 Strict Layer Boundaries
 
-Every AI coding agent contributing code to ArchTier must deliver its output in these five structured sections:
-1. **Architecture Analysis:** Identifies layer placement and verifies zero boundary conflicts.
-2. **Filepath Declaration:** Exact paths, dependencies, and consumers.
-3. **Code Implementation:** Strict TypeScript (`strict: true`), zero `any`, and comprehensive Zod validation.
-4. **Testing Requirements:** Specific unit/integration test specifications in `/tests/`.
-5. **Architectural Impact & Security Checklist:** Breaking changes, trade-offs, and security verification.
+ArchTier enforces its own architecture rules across its folder structure:
 
----
+```text
+/
+├── src/
+│   ├── app/                    # Next.js App Router (Pages & Route Handlers)
+│   │   ├── api/
+│   │   │   ├── analyze/        # Public rate-limited guardrail compiler
+│   │   │   ├── auth/           # Better Auth endpoints
+│   │   │   └── rulesets/       # Protected CRUD presets endpoints
+│   │   ├── dashboard/          # Protected Workbench page
+│   │   ├── login/              # Split-shell authentication page
+│   │   └── page.tsx            # High-conversion Landing page
+│   ├── components/             # Pure UI presentation layer
+│   │   ├── auth/               # Login form & live preview
+│   │   ├── dashboard/          # Workbench form, report viewer, preset sidebar
+│   │   ├── landing/            # Bento grid, prompt sandbox, pricing
+│   │   └── shared/             # Brand logo, command palette
+│   ├── lib/
+│   │   ├── auth/               # Better Auth server & client configuration
+│   │   ├── db/                 # Prisma client singleton (Vercel serverless safe)
+│   │   ├── engine/             # 100% PURE domain logic (Zero Next.js / Zero React)
+│   │   ├── schemas/            # Shared Zod contracts (Imports ONLY Zod)
+│   │   └── security/           # Error sanitizer & sliding-window rate limiter
+│   └── middleware.ts           # Route protection & security headers
+├── tests/
+│   ├── integration/            # API Route Handler tests
+│   └── unit/                   # Pure Engine, Conflict Detector & Compiler tests
+└── prisma/
+    └── schema.prisma           # Neon PostgreSQL database schema
+```
 
-## 🗺️ Product Roadmap
-
-- [x] **Milestone 1 — Foundation & Core Engine:** Next.js App Router, Design Tokens, Zod Schemas, Pure Guardrail Engine, `POST /api/analyze`, and Vitest suite.
-- [x] **Milestone 2 — Auth & Database Layer:** PostgreSQL Prisma schema, Better Auth integration, `/login` split-screen auth with password strength meter, and demo fills.
-- [ ] **Milestone 3 — Landing Page Polish:** Full bento grid interactions and prompt builder sandbox.
-- [ ] **Milestone 4 — Workspace Dashboard & Presets:** `/dashboard` split workbench, Saved Presets CRUD (`/api/rulesets`), and Multi-Agent File Exporter (`.cursor/rules/archtier.mdc`, `CLAUDE.md`, `AGENTS.md`).
-- [ ] **Milestone 5 — Production Hardening & Vercel Deploy:** Security audit, WCAG A11y verification, and live Vercel launch.
+### Dependency Rules:
+1. `/src/lib/schemas` imports **only** `zod`.
+2. `/src/lib/engine` is **100% pure, synchronous TypeScript**; zero React or Next.js imports.
+3. `/src/components/**` **never** imports Prisma or server-only auth directly.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
-
----
-
-<div align="center">
-  <sub>Built with precision by <strong>Alex Rivera &amp; MasRizqi07</strong> · Architecture guardrails that scale with your stage.</sub>
-</div>
+MIT © 2026 [MasRizqi07](https://github.com/MasRizqi07). All rights reserved.

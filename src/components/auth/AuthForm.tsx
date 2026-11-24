@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   SignInSchema,
   RegisterSchema,
@@ -383,6 +384,16 @@ export function AuthForm() {
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
         </button>
+
+        {/* Guest Demo Mode Switcher */}
+        <div className="text-center pt-1">
+          <Link
+            href="/dashboard?demo=true"
+            className="inline-flex items-center gap-1.5 text-xs font-mono text-ink-muted hover:text-accent-primary transition-colors"
+          >
+            <span>Skip sign-in and open Workbench in Demo Mode →</span>
+          </Link>
+        </div>
       </form>
 
       {/* Forgot Password Modal */}
