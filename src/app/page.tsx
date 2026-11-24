@@ -2,16 +2,23 @@ import React from 'react';
 import Link from 'next/link';
 import { BrandLogo } from '@/components/shared/BrandLogo';
 import { LandingSimulator } from '@/components/landing/LandingSimulator';
+import { BentoGrid } from '@/components/landing/BentoGrid';
+import { PromptSandbox } from '@/components/landing/PromptSandbox';
+import { PricingSection } from '@/components/landing/PricingSection';
+import { CommandPalette } from '@/components/shared/CommandPalette';
 import { StatusPill } from '@/components/shared/StatusPill';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex flex-col text-ink-primary">
+    <div className="min-h-screen flex flex-col text-ink-primary bg-bg-primary">
+      {/* Command Palette Modal */}
+      <CommandPalette />
+
       {/* Top Navbar */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-bg-primary/80 border-b border-border-subtle">
+      <header className="sticky top-0 z-40 backdrop-blur-md bg-bg-primary/80 border-b border-border-subtle">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <BrandLogo />
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-ink-secondary">
+          <nav className="hidden lg:flex items-center gap-6 text-xs font-mono font-medium text-ink-secondary">
             <a href="#simulator" className="hover:text-ink-primary transition-colors">
               Live Engine
             </a>
@@ -21,11 +28,20 @@ export default function HomePage() {
             <a href="#features" className="hover:text-ink-primary transition-colors">
               Guardrail Matrix
             </a>
+            <a href="#sandbox" className="hover:text-ink-primary transition-colors">
+              Prompt Builder
+            </a>
             <a href="#pricing" className="hover:text-ink-primary transition-colors">
               Pricing
             </a>
           </nav>
           <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded bg-surface-inset border border-border-subtle text-[11px] font-mono text-ink-muted">
+              <span>Press</span>
+              <kbd className="px-1 py-0.2 rounded bg-surface-card border border-border-strong text-ink-primary">
+                ⌘K
+              </kbd>
+            </div>
             <Link
               href="/login"
               className="px-4 py-2 rounded-md text-xs font-semibold font-mono uppercase tracking-wider bg-accent-primary text-[#04130D] hover:bg-accent-primary-hover active:scale-95 transition-all shadow-sm"
@@ -43,7 +59,7 @@ export default function HomePage() {
             {/* Left Hero Content */}
             <div className="lg:col-span-6 space-y-6 text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-card border border-border-strong text-xs font-mono text-ink-secondary">
-                <span className="w-2 h-2 rounded-full bg-accent-primary animate-pulse"></span>
+                <span className="w-2 h-2 rounded-full bg-accent-primary animate-pulse" />
                 <span>Anti Over-Engineering Guardrails</span>
               </div>
 
@@ -165,18 +181,53 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Asymmetric Bento Grid Section */}
+      <BentoGrid />
+
+      {/* Interactive Prompt Sandbox Section */}
+      <PromptSandbox />
+
+      {/* Transparent Pricing Section */}
+      <PricingSection />
+
       {/* Footer */}
-      <footer className="mt-auto py-8 border-t border-border-subtle bg-bg-elevated text-center text-xs text-ink-muted font-mono">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>ArchTier v2.4 — Architecture guardrails that scale with your stage.</div>
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="hover:text-ink-primary transition-colors">
-              Sign In
-            </Link>
-            <span>·</span>
-            <a href="#simulator" className="hover:text-ink-primary transition-colors">
-              Simulator
-            </a>
+      <footer className="mt-auto py-12 border-t border-border-subtle bg-bg-elevated text-xs text-ink-muted font-mono">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="space-y-1 text-center sm:text-left">
+              <div className="flex items-center justify-center sm:justify-start gap-2">
+                <BrandLogo />
+              </div>
+              <p className="text-ink-muted text-[11px]">
+                Architecture guardrails that scale with your stage. Press <kbd className="px-1 py-0.5 rounded bg-surface-inset border border-border-subtle">⌘K</kbd> anywhere.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-6">
+              <a href="#simulator" className="hover:text-ink-primary transition-colors">
+                Live Engine
+              </a>
+              <a href="#comparison" className="hover:text-ink-primary transition-colors">
+                Anti-Slop Diff
+              </a>
+              <a href="#features" className="hover:text-ink-primary transition-colors">
+                Guardrail Matrix
+              </a>
+              <a href="#sandbox" className="hover:text-ink-primary transition-colors">
+                Prompt Builder
+              </a>
+              <a href="#pricing" className="hover:text-ink-primary transition-colors">
+                Pricing
+              </a>
+              <Link href="/login" className="hover:text-ink-primary transition-colors text-accent-primary font-bold">
+                Sign In →
+              </Link>
+            </div>
+          </div>
+
+          <div className="border-t border-border-subtle pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px]">
+            <span>© 2026 ArchTier Project. Open Source &amp; Anti-Overengineering Standard.</span>
+            <span>Zero AI Slop · WCAG 2.1 AA Compliant</span>
           </div>
         </div>
       </footer>
